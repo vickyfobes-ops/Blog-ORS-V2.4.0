@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.env
+origin-blog-runs/
+publish-result.json
+asset-upload-result.json
+shopify.env
