@@ -34,6 +34,13 @@ TABLE_HEADER = "F2F2F2"
 TABLE_RULE = "BFBFBF"
 BODY_FONT = "Poppins"
 HEADING_FONT = "New York"
+BODY_STYLE = "Origin Body"
+TITLE_STYLE = "Origin Title"
+H2_STYLE = "Origin H2"
+H3_STYLE = "Origin H3"
+BULLET_STYLE = "Origin Bullet"
+NUMBER_STYLE = "Origin Number"
+TABLE_STYLE = "Origin Publish Table"
 
 
 def set_font_name(font, name: str) -> None:
@@ -47,6 +54,16 @@ def set_font_name(font, name: str) -> None:
     r_fonts.set(qn("w:hAnsi"), name)
     r_fonts.set(qn("w:eastAsia"), name)
     r_fonts.set(qn("w:cs"), name)
+
+
+def paragraph_style(document: Document, name: str, base: str):
+    """Return a deterministic custom paragraph style, creating it once."""
+    try:
+        style = document.styles[name]
+    except KeyError:
+        style = document.styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH)
+    style.base_style = document.styles[base]
+    return style
 
 
 def set_style_tracking(style, twentieths_of_a_point: int) -> None:
@@ -143,16 +160,21 @@ def configure_document(document: Document) -> None:
 
     normal = document.styles["Normal"]
     set_font_name(normal.font, BODY_FONT)
-    normal.font.size = Pt(12.75)  # Site body: 17 CSS px.
+    normal.font.size = Pt(12.5)
     normal.font.color.rgb = RGBColor.from_string(BLACK)
-    normal.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    normal.paragraph_format.space_before = Pt(0)
-    normal.paragraph_format.space_after = Pt(15)  # Site paragraph margin: 20 CSS px.
-    normal.paragraph_format.line_spacing = 1.7
-    normal.paragraph_format.widow_control = True
-    set_style_tracking(normal, -10)  # Site letter-spacing: -0.04em.
 
-    title = document.styles["Title"]
+    body = paragraph_style(document, BODY_STYLE, "Normal")
+    set_font_name(body.font, BODY_FONT)
+    body.font.size = Pt(12.5)  # Stable half-point approximation of site body type.
+    body.font.color.rgb = RGBColor.from_string(BLACK)
+    body.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    body.paragraph_format.space_before = Pt(0)
+    body.paragraph_format.space_after = Pt(15)  # Site paragraph margin: 20 CSS px.
+    body.paragraph_format.line_spacing = 1.7
+    body.paragraph_format.widow_control = True
+    set_style_tracking(body, -10)  # Site letter-spacing: -0.04em.
+
+    title = paragraph_style(document, TITLE_STYLE, BODY_STYLE)
     set_font_name(title.font, HEADING_FONT)
     title.font.size = Pt(33)  # Site title: 44 CSS px.
     title.font.bold = True
@@ -168,7 +190,7 @@ def configure_document(document: Document) -> None:
     if title_border is not None:
         title_p_pr.remove(title_border)
 
-    h2 = document.styles["Heading 1"]
+    h2 = paragraph_style(document, H2_STYLE, BODY_STYLE)
     set_font_name(h2.font, HEADING_FONT)
     h2.font.size = Pt(27)  # Site H2: 36 CSS px.
     h2.font.bold = True
@@ -180,7 +202,7 @@ def configure_document(document: Document) -> None:
     h2.paragraph_format.keep_with_next = True
     set_style_tracking(h2, -22)
 
-    h3 = document.styles["Heading 2"]
+    h3 = paragraph_style(document, H3_STYLE, BODY_STYLE)
     set_font_name(h3.font, HEADING_FONT)
     h3.font.size = Pt(16.5)  # Site H3: 22 CSS px.
     h3.font.bold = True
@@ -192,10 +214,13 @@ def configure_document(document: Document) -> None:
     h3.paragraph_format.keep_with_next = True
     set_style_tracking(h3, -13)
 
-    for style_name in ("List Bullet", "List Number"):
-        style = document.styles[style_name]
+    for style_name, base_style in (
+        (BULLET_STYLE, "List Bullet"),
+        (NUMBER_STYLE, BODY_STYLE),
+    ):
+        style = paragraph_style(document, style_name, base_style)
         set_font_name(style.font, BODY_FONT)
-        style.font.size = Pt(12.75)
+        style.font.size = Pt(12.5)
         style.font.color.rgb = RGBColor.from_string(BLACK)
         style.paragraph_format.left_indent = Inches(0.30)
         style.paragraph_format.first_line_indent = Inches(-0.18)
@@ -204,8 +229,7 @@ def configure_document(document: Document) -> None:
         style.paragraph_format.line_spacing = 1.7
         set_style_tracking(style, -10)
 
-    table_text = document.styles.add_style("OS Publish Table", WD_STYLE_TYPE.PARAGRAPH)
-    table_text.base_style = normal
+    table_text = paragraph_style(document, TABLE_STYLE, BODY_STYLE)
     set_font_name(table_text.font, BODY_FONT)
     table_text.font.size = Pt(10.5)
     table_text.font.color.rgb = RGBColor.from_string(BLACK)
@@ -272,7 +296,7 @@ def configure_numbered_list(document: Document) -> int:
     color.set(qn("w:val"), BLACK)
     r_pr.append(color)
     size = OxmlElement("w:sz")
-    size.set(qn("w:val"), "26")
+    size.set(qn("w:val"), "25")
     r_pr.append(size)
     level.append(r_pr)
     abstract.append(level)
@@ -445,7 +469,7 @@ def add_hyperlink(paragraph, label: str, url: str, *, bold: bool = False) -> Non
     color.set(qn("w:val"), BLACK)
     r_pr.append(color)
     size = OxmlElement("w:sz")
-    size.set(qn("w:val"), "26")
+    size.set(qn("w:val"), "25")
     r_pr.append(size)
     underline = OxmlElement("w:u")
     underline.set(qn("w:val"), "single")
@@ -486,7 +510,7 @@ def add_inline(paragraph, text: str) -> None:
         else:
             run = paragraph.add_run(token[1:-1])
             set_font_name(run.font, BODY_FONT)
-            run.font.size = Pt(12.75)
+            run.font.size = Pt(12.5)
         pos = match.end()
     if pos < len(text):
         paragraph.add_run(text[pos:])
@@ -540,7 +564,7 @@ def add_markdown_table(document: Document, lines: list[str]) -> None:
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
                 set_cell_shading(cell, TABLE_HEADER if row_idx == 0 else WHITE)
                 paragraph = cell.paragraphs[0]
-                paragraph.style = "OS Publish Table"
+                paragraph.style = TABLE_STYLE
                 paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 add_inline(paragraph, value)
                 if row_idx == 0:
@@ -551,12 +575,20 @@ def add_markdown_table(document: Document, lines: list[str]) -> None:
     spacer.paragraph_format.space_after = Pt(0)
 
 
-def add_picture(document: Document, image_path: Path, alt: str, *, width: float) -> None:
-    paragraph = document.add_paragraph()
+def add_picture(
+    document: Document,
+    image_path: Path,
+    alt: str,
+    *,
+    width: float,
+    keep_with_next: bool = False,
+) -> None:
+    paragraph = document.add_paragraph(style=BODY_STYLE)
     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     paragraph.paragraph_format.space_before = Pt(15)
     paragraph.paragraph_format.space_after = Pt(15)
     paragraph.paragraph_format.keep_together = True
+    paragraph.paragraph_format.keep_with_next = keep_with_next
     shape = paragraph.add_run().add_picture(str(image_path), width=Inches(width))
     shape._inline.docPr.set("descr", alt)
     shape._inline.docPr.set("title", alt)
@@ -609,10 +641,20 @@ def asset_image_path(bundle_dir: Path, asset: dict) -> Path:
 
 
 def add_asset_picture(document: Document, bundle_dir: Path, asset: dict) -> None:
-    width = float(asset.get("docxWidthInches", 5.5))
+    # Match the latest accepted Origin handoff: body scenes are 5.5 in, while
+    # the final project-review image is intentionally 4.5 in so the closing
+    # CTA does not spill onto a nearly empty extra page.
+    default_width = 4.5 if asset.get("slot") == "project-review" else 5.5
+    width = float(asset.get("docxWidthInches", default_width))
     if not 2.0 <= width <= 6.8:
         raise ValueError(f"docxWidthInches must be between 2.0 and 6.8 for slot: {asset.get('slot', '')}")
-    add_picture(document, asset_image_path(bundle_dir, asset), str(asset["alt"]), width=width)
+    add_picture(
+        document,
+        asset_image_path(bundle_dir, asset),
+        str(asset["alt"]),
+        width=width,
+        keep_with_next=asset.get("slot") == "project-review",
+    )
 
 
 def add_article(
@@ -623,8 +665,15 @@ def add_article(
     number_id: int,
 ) -> None:
     before_heading, after_heading = parse_image_placements(assets)
+    closing_headings = {
+        normalized_heading(str(asset.get("placement", "")).split(None, 1)[1])
+        for asset in assets.values()
+        if asset.get("slot") == "project-review"
+        and str(asset.get("placement", "")).lower().startswith("before ")
+    }
     pending_after: list[str] = []
     inserted: set[str] = set()
+    closing_section = False
 
     def insert_slots(slots: list[str]) -> None:
         for slot in slots:
@@ -655,33 +704,38 @@ def add_article(
         if line.startswith("## "):
             flush_pending_after()
             heading = normalized_heading(line[3:])
+            closing_section = heading in closing_headings
             insert_slots(before_heading.get(heading, []))
-            document.add_heading(heading, level=1)
+            document.add_paragraph(heading, style=H2_STYLE)
             pending_after = list(after_heading.get(heading, []))
         elif line.startswith("### "):
             flush_pending_after()
             heading = normalized_heading(line[4:])
+            closing_section = heading in closing_headings
             insert_slots(before_heading.get(heading, []))
-            document.add_heading(heading, level=2)
+            document.add_paragraph(heading, style=H3_STYLE)
             pending_after = list(after_heading.get(heading, []))
         elif re.match(r"^- ", line):
-            paragraph = document.add_paragraph(style="List Bullet")
+            paragraph = document.add_paragraph(style=BULLET_STYLE)
             paragraph.paragraph_format.keep_together = True
+            paragraph.paragraph_format.keep_with_next = closing_section
             add_inline(paragraph, re.sub(r"^- ", "", line))
             flush_pending_after()
         elif re.match(r"^\d+\. ", line):
-            paragraph = document.add_paragraph()
+            paragraph = document.add_paragraph(style=NUMBER_STYLE)
             paragraph.paragraph_format.left_indent = Inches(0.36)
             paragraph.paragraph_format.first_line_indent = Inches(-0.25)
             paragraph.paragraph_format.space_before = Pt(0)
             paragraph.paragraph_format.space_after = Pt(6)
             paragraph.paragraph_format.line_spacing = 1.7
             paragraph.paragraph_format.keep_together = True
+            paragraph.paragraph_format.keep_with_next = closing_section
             apply_numbering(paragraph, number_id)
             add_inline(paragraph, re.sub(r"^\d+\. ", "", line))
             flush_pending_after()
         else:
-            paragraph = document.add_paragraph()
+            paragraph = document.add_paragraph(style=BODY_STYLE)
+            paragraph.paragraph_format.keep_with_next = closing_section
             add_inline(paragraph, line)
             flush_pending_after()
         i += 1
@@ -713,7 +767,7 @@ def build(bundle_dir: Path, output: Path) -> None:
     cover_asset = dict(cover)
     cover_asset["docxWidthInches"] = float(cover.get("docxWidthInches", 6.7))
     add_asset_picture(document, bundle_dir, cover_asset)
-    document.add_paragraph(meta["title"], style="Title")
+    document.add_paragraph(meta["title"], style=TITLE_STYLE)
     add_article(document, extract_article_lines(article_text), bundle_dir, assets, number_id)
 
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -724,6 +778,9 @@ def build(bundle_dir: Path, output: Path) -> None:
         font_dir / "Poppins-Regular.ttf",
         font_dir / "Poppins-Bold.ttf",
     )
+    from verify_publish_docx import verify_publish_docx
+
+    verify_publish_docx(output, bundle_dir)
 
 
 def main() -> None:

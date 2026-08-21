@@ -2,7 +2,7 @@
 name: origin-sculpture-blog
 description: Create, review, revise, validate, publish, and safely update source-backed American English Shopify blog articles for Origin Sculpture through a strict three-step workflow. Use when a user provides a sculpture topic, asks for an Origin Sculpture SEO/GEO article or outline, supplies a revised Markdown/HTML/DOCX draft, requests relevant Origin Sculpture internal links with at least three product links, asks for pre-publish QA, wants to revise an existing Shopify article, or explicitly approves a prepared create/update action. Trigger on Origin Sculpture blog, 雕塑博客自动化、写博客、审核文章、修改原文章、添加内链、上传博客、发布 Shopify 文章, or explicit $origin-sculpture-blog invocation.
 metadata:
-  version: "2.4.0"
+  version: "2.4.1"
 ---
 
 # Origin Sculpture Blog
@@ -11,6 +11,7 @@ Turn one topic or existing Origin article into an approval-ready, internally lin
 
 ## Load the required standards
 
+- Read [references/release-lock-v2.4.1.md](references/release-lock-v2.4.1.md) first for every request. It is the release-level, fail-closed contract for the latest merchant-approved live/article and Word format.
 - Read [references/workflow-contract.md](references/workflow-contract.md) for every request.
 - Read [references/origin-brand-and-site.md](references/origin-brand-and-site.md) before research, drafting, linking, or publication.
 - Read [references/editorial-seo-geo.md](references/editorial-seo-geo.md) before outlining or drafting.
@@ -95,9 +96,17 @@ Also generate the clean final-upload Word review document defined in `references
 python scripts/build_publish_docx.py \
   <run-dir> \
   <run-dir>/<Title>-Final-Upload.docx
+
+python scripts/verify_publish_docx.py \
+  <run-dir>/<Title>-Final-Upload.docx \
+  --bundle <run-dir>
 ```
 
-Use the document-capable Python runtime when the default Python lacks `python-docx`. Present the DOCX as the primary review artifact; keep SEO notes, source ledgers, caveats, approval phrases, and internal production metadata in the conversation or bundle, not as colored headers, footers, watermarks, or review pages inside the document.
+First resolve and use the document-capable Python runtime supplied by the Codex workspace dependencies; do not fall back to system Python or improvise a replacement generator. `build_publish_docx.py` is the only allowed DOCX generator for this workflow. Never hand-build or redesign the DOCX with Word defaults, a generic document preset, a fresh webpage interpretation, or an ad hoc script. If the builder, bundled fonts, verifier, or renderer is unavailable, report the dependency as a blocker and stop the Word deliverable instead of changing the format.
+
+The builder must use the Origin custom styles and pass `verify_publish_docx.py`. Render every page to PNG and inspect it against `assets/format-reference/latest-format-page-1.png`; reject blue/theme-colored text, serif body copy, missing Poppins embedding, wrong first-page order, headers/footers, or any visible style outside the approved Origin style set. Do not show an approval phrase or `AWAITING_APPROVAL` until both structural verification and visual QA pass.
+
+Present the DOCX as the primary review artifact; keep SEO notes, source ledgers, caveats, approval phrases, and internal production metadata in the conversation or bundle, not as colored headers, footers, watermarks, or review pages inside the document.
 
 If the user requests changes, revise the package, rerun preparation, and show the new phrases. Any edit invalidates the old hash and phrase.
 
@@ -156,6 +165,7 @@ For first-time setup, read `references/shopify-setup.md`, configure the protecte
 
 - `scripts/site_inventory.py`: crawl the canonical sitemap and rank candidate links.
 - `scripts/prepare_bundle.py`: audit structure, content-tier length, marked/evidenced Origin experience, metadata, link counts, source files, unsafe HTML, canonical inventory membership, live link status, and any captured update target; create a content hash and action-specific approval phrase.
+- `scripts/build_publish_docx.py` and `scripts/verify_publish_docx.py`: generate the one approved final-upload Word format and fail closed on theme colors, default Word styles, font drift, wrong first-page order, missing image alt text, or layout-token drift.
 - `scripts/shopify_publish.py`: perform a safe dry run, capture an existing update target, list blogs, validate Blog Filter/template organization, enforce bounded throttle backoff and the daily new-article limit, reject duplicate creates or stale updates, and create/update the approved Shopify article through the GraphQL Admin API.
 
 Do not bypass a script blocker manually. Fix the artifact or configuration and rerun it.
