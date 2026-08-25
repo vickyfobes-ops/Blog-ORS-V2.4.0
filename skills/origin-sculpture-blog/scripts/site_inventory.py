@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 
-USER_AGENT = "OriginSculptureBlogSkill/2.4.2 (+https://originsculpture.com)"
+USER_AGENT = "OriginSculptureBlogSkill/2.4.3 (+https://originsculpture.com)"
 MAX_SITEMAPS = 50
 MAX_URLS = 10000
 

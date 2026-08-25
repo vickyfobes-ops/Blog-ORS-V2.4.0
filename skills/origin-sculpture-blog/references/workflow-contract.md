@@ -80,7 +80,13 @@ When the bundle uses local images, use `image-assets.json` instead of a public `
     "placement": "Shopify article cover image",
     "alt": "Specific descriptive alt text",
     "sourceType": "generated-editorial",
-    "visualRole": "environment-scene"
+    "visualRole": "environment-scene",
+    "visualQa": {
+      "inspected": true,
+      "noScreenUiTextLogo": true,
+      "realisticMaterialScale": true,
+      "sectionRelevant": true
+    }
   }
 ]
 ```
@@ -88,6 +94,8 @@ When the bundle uses local images, use `image-assets.json` instead of a public `
 `png` is required for the portable Word artifact and is hash-bound with the review bundle. `webp` is required and is the only format published to Shopify. Every non-cover `placement` must be `Before <exact public H2/H3>` or `After <exact public H2/H3>`. Reference inline assets in `article.html` as `origin-asset://<slot>`. The publisher uploads the approved WebP bytes to Shopify Files after confirmation, replaces only those placeholders in memory, and uses the `cover` slot as the article image. Do not use a local filesystem path in publishable HTML.
 
 Every image needs a `sourceType`: `generated-editorial`, `origin-owned`, or `user-provided`. Every image also needs a `visualRole`: `environment-scene`, `process-scene`, `material-detail`, or `product-evidence`. The cover defaults to a `generated-editorial` `environment-scene`; at least 60% of all image assets must be generated editorial scenes/details, and no more than two may use the `product-evidence` role by default. A screen, webpage, catalog UI, visible logo, watermark, or generated text cannot be the primary scene.
+
+After opening the actual PNG, record four boolean `visualQa` results for every asset: `inspected`, `noScreenUiTextLogo`, `realisticMaterialScale`, and `sectionRelevant`. All four must be exactly `true`; never prefill them before inspection. These fields make the required human/vision review auditable but do not convert generated imagery into project evidence.
 
 ## `link-plan.json` schema
 

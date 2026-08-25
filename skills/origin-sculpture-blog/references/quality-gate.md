@@ -19,6 +19,7 @@
 - `editorialMode` is missing or is not exactly `site-led` or `expert-led`.
 - An image asset lacks `sourceType`/`visualRole`, generated editorial images are below 60%, the cover is not an environment scene, or more than two images default to product-evidence. A non-generated cover produces a warning and requires visual review; AI imagery must still remain the majority.
 - Visual QA finds a laptop/phone screen, webpage, storefront UI, gallery grid, visible logo, watermark, generated text, or an obvious anatomy/material/fabrication/installation error as the primary scene.
+- Any image has not actually been opened and reviewed, or one of `visualQa.inspected`, `visualQa.noScreenUiTextLogo`, `visualQa.realisticMaterialScale`, and `visualQa.sectionRelevant` is missing or false.
 - The Origin experience marker pair is missing/duplicated, the marked section is outside 10–20% of body words, lacks a dynamic heading/clear Origin attribution, or connects fewer than two topic-relevant experience signals.
 - The marked section uses `Why Choose Origin`, lacks a live Origin/user-provided evidence entry, or turns general industry practice into unsupported first-hand company experience.
 - The Shopify target does not match the approved site, source files changed after preparation, the confirmation phrase is stale, or the handle already exists.

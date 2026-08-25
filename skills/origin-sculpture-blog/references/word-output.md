@@ -62,3 +62,5 @@ Run the deterministic checks with the document-capable Python runtime supplied b
 ```
 
 Then render every page through the document renderer and inspect all page PNGs. Structural verification alone does not replace visual QA.
+
+After a fresh install or version update, first run `scripts/self_test.py` with the same workspace document Python runtime. Its isolated positive/negative tests and rendered first-page regression must pass before generating a production review DOCX.

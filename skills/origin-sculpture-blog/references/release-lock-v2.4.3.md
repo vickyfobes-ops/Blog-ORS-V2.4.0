@@ -1,4 +1,4 @@
-# Blog—ORS—V2.4.2 release lock
+# Blog—ORS—V2.4.3 release lock
 
 This file is the merchant-approved, fail-closed contract for this release. The detailed references remain authoritative for implementation. If any generated artifact conflicts with this lock, stop and fix the artifact; never silently downgrade, improvise, or substitute a generic workflow.
 
@@ -7,6 +7,12 @@ This file is the merchant-approved, fail-closed contract for this release. The d
 - Public Shopify article structure baseline: `https://originsculpture.com/blogs/news/sculpture-finish-guide`, verified 2026-08-21. Its live H1 is `Sculpture Finish Guide: Choosing Bronze, Stainless Steel, Stone and Fiberglass Finishes` and its topic-specific experience section is `How Origin Sculpture Controls a Finish from Physical Sample to Final Inspection`.
 - Word format baseline: the accepted final-upload document represented by `assets/format-reference/latest-format-page-1.png` and generated only by `scripts/build_publish_docx.py`.
 - Preserve the current Origin site structure and editorial rhythm; optimize content for SEO/GEO and reader decisions without replacing the approved visual format with Word defaults, a generic report, or a decorative review template.
+
+## Locked installation reliability gate
+
+- After every fresh installation or version update, run `scripts/self_test.py` with the Codex workspace document Python runtime. It must return `PASS` before the Skill handles a production article.
+- The self-test must use only the installed copy and an isolated temporary directory. It must pass a valid bundle, reject an invalid editorial/image bundle, build and structurally verify the final-upload DOCX, reject a tampered-font DOCX, render the document, and keep the locked first-page typography/layout difference within the script threshold.
+- The self-test never reads credentials, calls Shopify, uploads files, creates an article, or modifies a production bundle. A missing document renderer, font asset, runtime dependency, or failed negative test is a release blocker—not a reason to skip the gate.
 
 ## Locked operator workflow
 
@@ -38,6 +44,7 @@ Any content, metadata, link, image, source, or target change invalidates the old
 - Normally use four to eight useful images including the cover. AI-generated photorealistic environment, material, and process scenes are the default primary visual system: at least `60%` of the image manifest, with the cover normally a generated environment scene.
 - Do not use a laptop, phone, webpage, storefront UI, gallery grid, visible logo, watermark, or generated text as the primary scene. Reject obvious anatomical, scale, material, fabrication, or installation errors during visual QA.
 - Use no more than two Origin-owned product/project images by default, only as relevant evidence. Generated scenes must be disclosed as editorial examples and must never be described as completed Origin projects or client installations.
+- Record `visualQa.inspected`, `visualQa.noScreenUiTextLogo`, `visualQa.realisticMaterialScale`, and `visualQa.sectionRelevant` as true for every approved asset only after visual inspection. Any missing or false value blocks preparation.
 - Images need specific alt text, stable slots, exact public-heading placement, PNG for Word, and WebP for Shopify. Distribute images by reader need rather than clustering them.
 
 ## Locked Word format
@@ -61,6 +68,7 @@ Any content, metadata, link, image, source, or target change invalidates the old
 ## Enforcement map
 
 - `scripts/site_inventory.py` locks canonical URL discovery.
+- `scripts/self_test.py` locks install-time positive/negative bundle behavior, portable DOCX generation, font rejection, rendering, and first-page visual regression.
 - `scripts/prepare_bundle.py` locks tier length, experience ratio/evidence, structure, HTML safety, links, image manifest, metadata, update target, hashes, and action-specific approval phrases.
 - `scripts/build_publish_docx.py` plus `scripts/verify_publish_docx.py` lock the approved Word appearance and content order.
 - `scripts/shopify_publish.py` locks store identity, Blog Filter/template handling, exact approval, duplicate/stale-target protection, API backoff, mutation non-retry, and the daily live-publication cap.

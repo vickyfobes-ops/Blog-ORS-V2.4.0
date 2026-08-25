@@ -28,7 +28,7 @@ Use the live sitemap because product handles and titles may contain legacy spell
 
 ## Published format baseline
 
-The current live structural baseline for release 2.4.2 is `https://originsculpture.com/blogs/news/sculpture-finish-guide`, verified 2026-08-21. Preserve its theme-rendered H1/body hierarchy and clean Origin article rhythm while adapting sections to the new topic. The corresponding final-upload Word appearance is locked separately in `word-output.md` and `assets/format-reference/latest-format-page-1.png`.
+The current live structural baseline for release 2.4.3 is `https://originsculpture.com/blogs/news/sculpture-finish-guide`, verified 2026-08-21. Preserve its theme-rendered H1/body hierarchy and clean Origin article rhythm while adapting sections to the new topic. The corresponding final-upload Word appearance is locked separately in `word-output.md` and `assets/format-reference/latest-format-page-1.png`.
 
 The supplied 12 indexed examples generally use:
 

@@ -29,6 +29,12 @@ CONTENT_TIER_RANGES = {
 EDITORIAL_MODES = {"site-led", "expert-led"}
 IMAGE_SOURCE_TYPES = {"generated-editorial", "origin-owned", "user-provided"}
 IMAGE_VISUAL_ROLES = {"environment-scene", "process-scene", "material-detail", "product-evidence"}
+IMAGE_VISUAL_QA_KEYS = (
+    "inspected",
+    "noScreenUiTextLogo",
+    "realisticMaterialScale",
+    "sectionRelevant",
+)
 EXPERIENCE_START = "<!-- origin-experience:start -->"
 EXPERIENCE_END = "<!-- origin-experience:end -->"
 EXPERIENCE_SIGNAL_GROUPS = {
@@ -111,7 +117,7 @@ PLACEHOLDER_PATTERNS = [
     r"shopifypreview\.com",
     r"preview_theme_id=",
 ]
-USER_AGENT = "OriginSculptureBlogSkill/2.4.2 (+https://originsculpture.com)"
+USER_AGENT = "OriginSculptureBlogSkill/2.4.3 (+https://originsculpture.com)"
 
 
 def validate_content_tier(meta: dict) -> tuple[str, tuple[int, int]]:
@@ -474,6 +480,7 @@ def main() -> int:
                 placement = str(item.get("placement", "")).strip()
                 source_type = str(item.get("sourceType", "")).strip().lower()
                 visual_role = str(item.get("visualRole", "")).strip().lower()
+                visual_qa = item.get("visualQa")
                 if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slot):
                     blockers.append(f"image asset {index + 1} has an invalid slot")
                     continue
@@ -516,6 +523,14 @@ def main() -> int:
                     blockers.append(
                         f"image asset '{slot}' visualRole must be one of: {', '.join(sorted(IMAGE_VISUAL_ROLES))}"
                     )
+                if not isinstance(visual_qa, dict):
+                    blockers.append(f"image asset '{slot}' is missing visualQa review results")
+                    visual_qa = {}
+                missing_visual_checks = [key for key in IMAGE_VISUAL_QA_KEYS if visual_qa.get(key) is not True]
+                if missing_visual_checks:
+                    blockers.append(
+                        f"image asset '{slot}' failed or omitted visualQa: {', '.join(missing_visual_checks)}"
+                    )
                 if not placement:
                     blockers.append(f"image asset '{slot}' is missing placement guidance")
                 elif slot == "cover":
@@ -545,6 +560,7 @@ def main() -> int:
                 item["placement"] = placement
                 item["sourceType"] = source_type
                 item["visualRole"] = visual_role
+                item["visualQa"] = {key: visual_qa.get(key) is True for key in IMAGE_VISUAL_QA_KEYS}
                 item["sha256"] = file_hash(asset_path)
                 asset_by_slot[slot] = item
                 asset_source_hashes[f"asset:{relative}"] = item["sha256"]
