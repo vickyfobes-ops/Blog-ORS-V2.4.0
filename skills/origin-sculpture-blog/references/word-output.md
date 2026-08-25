@@ -19,7 +19,7 @@ Use this standard whenever the Skill creates the merchant review DOCX. The docum
 ## Typography and color
 
 - All visible text is black (`#000000`), including headings, body copy, table text, captions when used, and hyperlinks. Hyperlinks use a single underline instead of blue text.
-- Match the Origin article hierarchy: New York for the title and headings when available; Poppins for body, lists, links, and tables. Embed the bundled OFL-licensed Poppins regular and bold fonts.
+- Match the Origin article hierarchy with bundled, portable fonts: Libre Baskerville for the title and headings; Poppins for body, lists, links, and tables. Embed the OFL-licensed regular and bold faces of both families so Windows and Mac render the same hierarchy.
 - Target sizes: title 33 pt, H2 27 pt, H3 16.5 pt, body 12.5 pt, and tables 10.5 pt. Keep body line spacing near 1.7 and preserve the site's generous paragraph spacing.
 - Do not substitute a decorative brand treatment, colored review chrome, or a separate cover sheet.
 
@@ -28,9 +28,9 @@ Use only the custom visible paragraph styles created by the builder:
 | Content role | Required style | Font | Size | Color |
 |---|---|---:|---:|---:|
 | Body | Origin Body | Poppins | 12.5 pt | #000000 |
-| Public title | Origin Title | New York | 33 pt | #000000 |
-| H2 | Origin H2 | New York | 27 pt | #000000 |
-| H3 | Origin H3 | New York | 16.5 pt | #000000 |
+| Public title | Origin Title | Libre Baskerville | 33 pt | #000000 |
+| H2 | Origin H2 | Libre Baskerville | 27 pt | #000000 |
+| H3 | Origin H3 | Libre Baskerville | 16.5 pt | #000000 |
 | Bullets | Origin Bullet | Poppins | 12.5 pt | #000000 |
 | Numbers | Origin Number | Poppins | 12.5 pt | #000000 |
 | Tables | Origin Publish Table | Poppins | 10.5 pt | #000000 |
@@ -47,7 +47,7 @@ Do not use the built-in Word `Title`, `Heading 1`, `Heading 2`, or theme-colored
 - Place every non-cover image according to its hash-bound `image-assets.json` instruction: `Before <exact H2/H3>` or after the first paragraph under `After <exact H2/H3>`.
 - Keep headings with the following paragraph. Prevent table-row splitting, repeat or reproduce table headers on continuation pages, and avoid clipped narrow columns.
 - Add specific alt text to every embedded image. Preserve usable external hyperlinks.
-- Render or inspect the DOCX after generation. Fix overflow, blank pages, orphan headings, clipped tables, missing images, font fallback that materially changes hierarchy, and any non-black visible text before delivery.
+- Render or inspect the DOCX after generation. Fix overflow, blank pages, orphan headings, clipped tables, missing images, any sans-serif heading fallback, and any non-black visible text before delivery. The verifier must find regular and bold embedding declarations for both Libre Baskerville and Poppins.
 
 Run the deterministic checks with the document-capable Python runtime supplied by the Codex workspace dependencies:
 

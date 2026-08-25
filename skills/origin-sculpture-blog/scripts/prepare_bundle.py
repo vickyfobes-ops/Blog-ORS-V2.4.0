@@ -16,13 +16,19 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-BASE_SOURCE_FILES = ["meta.json", "article.md", "article.html", "summary.html", "sources.md", "link-plan.json"]
+BASE_SOURCE_FILES = [
+    "meta.json", "article.md", "article.html", "summary.html", "sources.md", "link-plan.json",
+    "image-assets.json",
+]
 IMAGE_MANIFEST = "image-assets.json"
 UPDATE_TARGET_MANIFEST = "update-target.json"
 CONTENT_TIER_RANGES = {
     "pillar": (1800, 2500),
     "supporting": (1000, 1600),
 }
+EDITORIAL_MODES = {"site-led", "expert-led"}
+IMAGE_SOURCE_TYPES = {"generated-editorial", "origin-owned", "user-provided"}
+IMAGE_VISUAL_ROLES = {"environment-scene", "process-scene", "material-detail", "product-evidence"}
 EXPERIENCE_START = "<!-- origin-experience:start -->"
 EXPERIENCE_END = "<!-- origin-experience:end -->"
 EXPERIENCE_SIGNAL_GROUPS = {
@@ -105,7 +111,7 @@ PLACEHOLDER_PATTERNS = [
     r"shopifypreview\.com",
     r"preview_theme_id=",
 ]
-USER_AGENT = "OriginSculptureBlogSkill/2.4.0 (+https://originsculpture.com)"
+USER_AGENT = "OriginSculptureBlogSkill/2.4.2 (+https://originsculpture.com)"
 
 
 def validate_content_tier(meta: dict) -> tuple[str, tuple[int, int]]:
@@ -113,6 +119,13 @@ def validate_content_tier(meta: dict) -> tuple[str, tuple[int, int]]:
     if tier not in CONTENT_TIER_RANGES:
         raise ValueError("contentTier must be either 'pillar' or 'supporting'")
     return tier, CONTENT_TIER_RANGES[tier]
+
+
+def validate_editorial_mode(meta: dict) -> str:
+    mode = str(meta.get("editorialMode", "")).strip().lower()
+    if mode not in EDITORIAL_MODES:
+        raise ValueError("editorialMode must be either 'site-led' or 'expert-led'")
+    return mode
 
 
 def origin_experience_evidence(sources: str) -> list[str]:
@@ -366,7 +379,10 @@ def main() -> int:
         print(json.dumps({"status": "BLOCKED", "blockers": [f"Invalid JSON: {exc}"]}, indent=2))
         return 1
 
-    required_meta = ["siteDomain", "blogHandle", "title", "seoTitle", "metaDescription", "handle", "author", "tags"]
+    required_meta = [
+        "siteDomain", "blogHandle", "title", "seoTitle", "metaDescription", "handle", "author", "tags",
+        "editorialMode",
+    ]
     for field in required_meta:
         if not meta.get(field):
             blockers.append(f"meta.json missing {field}")
@@ -410,6 +426,12 @@ def main() -> int:
     except ValueError as exc:
         blockers.append(str(exc))
 
+    editorial_mode = ""
+    try:
+        editorial_mode = validate_editorial_mode(meta)
+    except ValueError as exc:
+        blockers.append(str(exc))
+
     template_suffix = meta.get("templateSuffix")
     if template_suffix is not None:
         template_suffix = str(template_suffix).strip()
@@ -450,6 +472,8 @@ def main() -> int:
                 relative = str(item.get("webp", "")).strip()
                 alt = str(item.get("alt", "")).strip()
                 placement = str(item.get("placement", "")).strip()
+                source_type = str(item.get("sourceType", "")).strip().lower()
+                visual_role = str(item.get("visualRole", "")).strip().lower()
                 if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slot):
                     blockers.append(f"image asset {index + 1} has an invalid slot")
                     continue
@@ -484,11 +508,23 @@ def main() -> int:
                         blockers.append(str(exc))
                 if not alt:
                     blockers.append(f"image asset '{slot}' is missing alt text")
+                if source_type not in IMAGE_SOURCE_TYPES:
+                    blockers.append(
+                        f"image asset '{slot}' sourceType must be one of: {', '.join(sorted(IMAGE_SOURCE_TYPES))}"
+                    )
+                if visual_role not in IMAGE_VISUAL_ROLES:
+                    blockers.append(
+                        f"image asset '{slot}' visualRole must be one of: {', '.join(sorted(IMAGE_VISUAL_ROLES))}"
+                    )
                 if not placement:
                     blockers.append(f"image asset '{slot}' is missing placement guidance")
                 elif slot == "cover":
                     if placement != "Shopify article cover image":
                         blockers.append("cover image placement must be 'Shopify article cover image'")
+                    if source_type != "generated-editorial":
+                        warnings.append("cover image normally uses a generated-editorial environment scene")
+                    if visual_role != "environment-scene":
+                        blockers.append("cover image visualRole must be 'environment-scene'")
                 else:
                     placement_match = re.fullmatch(r"(?:Before|After)\s+(.+)", placement)
                     heading_texts = {text for tag, text in parsed.headings if tag in {"h2", "h3"}}
@@ -507,6 +543,8 @@ def main() -> int:
                 item["webp"] = relative
                 item["alt"] = alt
                 item["placement"] = placement
+                item["sourceType"] = source_type
+                item["visualRole"] = visual_role
                 item["sha256"] = file_hash(asset_path)
                 asset_by_slot[slot] = item
                 asset_source_hashes[f"asset:{relative}"] = item["sha256"]
@@ -531,6 +569,28 @@ def main() -> int:
             blockers.append(f"image asset is not used in article.html: {slot}")
     if image_assets and "cover" not in asset_by_slot:
         blockers.append("image-assets.json must include a cover slot")
+    if image_assets:
+        generated_count = sum(
+            item.get("sourceType") == "generated-editorial" for item in asset_by_slot.values()
+        )
+        generated_ratio = generated_count / len(asset_by_slot) if asset_by_slot else 0.0
+        product_evidence_count = sum(
+            item.get("visualRole") == "product-evidence" for item in asset_by_slot.values()
+        )
+        if not 4 <= len(asset_by_slot) <= 8:
+            blockers.append(f"use 4–8 approved image assets including the cover; found {len(asset_by_slot)}")
+        if generated_ratio < 0.60:
+            blockers.append(
+                f"AI editorial scenes must be the primary image source (at least 60%); found {generated_ratio:.1%}"
+            )
+        if product_evidence_count > 2:
+            blockers.append(
+                f"use no more than 2 product-evidence images by default; found {product_evidence_count}"
+            )
+    else:
+        generated_count = 0
+        generated_ratio = 0.0
+        product_evidence_count = 0
 
     review_tokens = markdown_article_words(review)
     html_tokens = comparison_words(" ".join(parsed.text_parts))
@@ -708,7 +768,7 @@ def main() -> int:
         warnings.append("live link checks were not requested")
 
     source_files = list(BASE_SOURCE_FILES)
-    if image_manifest_path.is_file():
+    if image_manifest_path.is_file() and IMAGE_MANIFEST not in source_files:
         source_files.append(IMAGE_MANIFEST)
     if publication_action == "update" and update_target_path.is_file():
         source_files.append(UPDATE_TARGET_MANIFEST)
@@ -730,10 +790,14 @@ def main() -> int:
             "productLinkSections": len(product_link_sections),
             "authoritativeSources": len(authoritative),
             "imageAssets": len(image_assets),
+            "generatedEditorialImages": generated_count,
+            "generatedImageRatio": round(generated_ratio, 4),
+            "productEvidenceImages": product_evidence_count,
             "experienceWords": experience["words"],
         },
         "contentPolicy": {
             "contentTier": content_tier,
+            "editorialMode": editorial_mode,
             "wordRange": list(content_range) if content_tier else [],
             "experienceRatio": round(experience["ratio"], 4),
             "experienceHeadings": experience["headings"],
@@ -797,6 +861,7 @@ def main() -> int:
         "siteDomain": site_domain,
         "blogHandle": str(meta["blogHandle"]),
         "contentTier": content_tier,
+        "editorialMode": editorial_mode,
         "publicationAction": publication_action,
         "article": article,
     }

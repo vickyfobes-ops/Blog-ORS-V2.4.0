@@ -18,6 +18,15 @@ Do not merge models merely to make the article longer.
 
 Let the reader task determine the tier. A narrow topic should remain useful and focused rather than being padded into a pillar.
 
+## Choose the editorial mode before outlining
+
+Use exactly one mode and record it in `meta.json`:
+
+- `site-led`: custom sculpture process, how to order, service, company, consultation, and working-with-Origin topics. Write for a buyer who is not an engineer. Build roughly 70–80% of the article around customer questions and current Origin site content: what the reader chooses, what information to send, what they can review, which products or examples clarify the choice, and what happens next. Keep technical or production explanation to about 20–30%. Explain unavoidable terms immediately and remove internal SOP detail that does not change a customer decision.
+- `expert-led`: materials, finishes, trends, inspiration, maintenance, installation, environment, and site-planning topics. Use precise professional terms when they reduce risk or improve a choice, but define each term at first use and state its visible, cost, care, or installation consequence in plain English.
+
+Do not let a process/service article become a fabrication textbook. Do not make a maintenance or installation guide vague merely to sound simple.
+
 ## Best-performing decision structure
 
 Adapt this sequence to the topic:
@@ -60,10 +69,11 @@ Write passages that can be accurately extracted without losing their conditions:
 
 ## Image evidence rules
 
-- Prefer current Origin-owned product, installed-setting, workshop, sample, packing, and installation photographs when they are relevant and their provenance is clear.
-- If a suitable real image is unavailable, a photorealistic generated scenario may explain scale, light, circulation, climate, or maintenance access, but `image-plan.md` must label it as generated editorial imagery.
+- Use AI-generated photorealistic environment, material, and process scenes as the primary visual system: at least 60% of the approved image manifest and normally the cover. They should show sculpture in believable residential, hospitality, garden, plaza, workshop, delivery, or installation contexts that support the surrounding section.
+- Do not make a laptop, phone, webpage, storefront UI, gallery grid, text panel, visible logo, or watermark the subject. Avoid generated typography entirely. Reject impossible material behavior, tools, anatomy, rigging, bases, or scale during visual QA.
+- Use no more than two current Origin-owned product, installed-setting, workshop, sample, packing, or installation images by default. Their role is site-specific evidence, not a substitute for the scene system.
 - Never describe generated imagery as a completed Origin Sculpture project, client installation, case study, or proof of a business claim.
-- Avoid text, logos, signatures, watermarks, impossible fabrication details, and near-duplicate scenes. Give every meaningful image specific alt text describing what the reader can actually see.
+- In `image-assets.json`, label every item with `sourceType` (`generated-editorial`, `origin-owned`, or `user-provided`) and `visualRole` (`environment-scene`, `process-scene`, `material-detail`, or `product-evidence`). Give every meaningful image specific alt text describing what the reader can actually see.
 
 ## Add topic-specific Origin experience
 

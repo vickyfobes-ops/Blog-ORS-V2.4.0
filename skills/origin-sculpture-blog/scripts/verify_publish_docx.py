@@ -15,9 +15,9 @@ from lxml import etree as ET
 BLACK = "000000"
 EXPECTED_STYLES = {
     "Origin Body": ("Poppins", 12.5),
-    "Origin Title": ("New York", 33.0),
-    "Origin H2": ("New York", 27.0),
-    "Origin H3": ("New York", 16.5),
+    "Origin Title": ("Libre Baskerville", 33.0),
+    "Origin H2": ("Libre Baskerville", 27.0),
+    "Origin H3": ("Libre Baskerville", 16.5),
     "Origin Bullet": ("Poppins", 12.5),
     "Origin Number": ("Poppins", 12.5),
     "Origin Publish Table": ("Poppins", 10.5),
@@ -117,12 +117,18 @@ def verify_publish_docx(docx_path: Path, bundle_dir: Path | None = None) -> None
                 fail(errors, "every hyperlink must use a single underline")
 
         font_parts = [name for name in names if name.startswith("word/fonts/") and name.endswith(".odttf")]
-        if len(font_parts) < 2:
-            fail(errors, "embedded Poppins regular and bold font parts are missing")
+        if len(font_parts) < 4:
+            fail(errors, "embedded Poppins and Libre Baskerville regular/bold font parts are missing")
         font_table = ET.fromstring(archive.read("word/fontTable.xml"))
-        poppins = font_table.xpath("//w:font[@w:name='Poppins']", namespaces={"w": W_NS})
-        if not poppins or not poppins[0].xpath("./w:embedRegular | ./w:embedBold", namespaces={"w": W_NS}):
-            fail(errors, "Poppins embedding declarations are missing")
+        for family in ("Poppins", "Libre Baskerville"):
+            declared = font_table.xpath(f"//w:font[@w:name='{family}']", namespaces={"w": W_NS})
+            if not declared:
+                fail(errors, f"{family} font-table declaration is missing")
+                continue
+            regular = declared[0].xpath("./w:embedRegular", namespaces={"w": W_NS})
+            bold = declared[0].xpath("./w:embedBold", namespaces={"w": W_NS})
+            if not regular or not bold:
+                fail(errors, f"{family} regular and bold embedding declarations are required")
 
     alt_nodes = document.element.xpath(".//wp:docPr")
     if any(not (node.get("descr") or "").strip() for node in alt_nodes):

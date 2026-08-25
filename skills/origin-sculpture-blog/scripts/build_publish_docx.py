@@ -33,7 +33,7 @@ WHITE = "FFFFFF"
 TABLE_HEADER = "F2F2F2"
 TABLE_RULE = "BFBFBF"
 BODY_FONT = "Poppins"
-HEADING_FONT = "New York"
+HEADING_FONT = "Libre Baskerville"
 BODY_STYLE = "Origin Body"
 TITLE_STYLE = "Origin Title"
 H2_STYLE = "Origin H2"
@@ -348,8 +348,14 @@ def obfuscate_font(font_data: bytes, font_key: uuid.UUID) -> bytes:
     return bytes(data)
 
 
-def embed_poppins(document_path: Path, regular_path: Path, bold_path: Path) -> None:
-    """Embed OFL-licensed Poppins regular and bold faces in the DOCX."""
+def embed_font_family(
+    document_path: Path,
+    family_name: str,
+    regular_path: Path,
+    bold_path: Path,
+    seed_prefix: str,
+) -> None:
+    """Embed one OFL-licensed regular/bold font family in the DOCX."""
     for font_path in (regular_path, bold_path):
         if not font_path.exists():
             raise FileNotFoundError(f"Required font asset is missing: {font_path}")
@@ -367,11 +373,11 @@ def embed_poppins(document_path: Path, regular_path: Path, bold_path: Path) -> N
     font_table = ET.fromstring(entries["word/fontTable.xml"])
     font_node = None
     for candidate in font_table.findall(f"{{{w_ns}}}font"):
-        if candidate.get(f"{{{w_ns}}}name") == BODY_FONT:
+        if candidate.get(f"{{{w_ns}}}name") == family_name:
             font_node = candidate
             break
     if font_node is None:
-        font_node = ET.SubElement(font_table, f"{{{w_ns}}}font", {f"{{{w_ns}}}name": BODY_FONT})
+        font_node = ET.SubElement(font_table, f"{{{w_ns}}}font", {f"{{{w_ns}}}name": family_name})
     for tag in ("embedRegular", "embedBold"):
         existing = font_node.find(f"{{{w_ns}}}{tag}")
         if existing is not None:
@@ -392,8 +398,8 @@ def embed_poppins(document_path: Path, regular_path: Path, bold_path: Path) -> N
 
     font_parts: dict[str, bytes] = {}
     for tag, font_path, seed in (
-        ("embedRegular", regular_path, "origin-sculpture-poppins-regular"),
-        ("embedBold", bold_path, "origin-sculpture-poppins-bold"),
+        ("embedRegular", regular_path, f"{seed_prefix}-regular"),
+        ("embedBold", bold_path, f"{seed_prefix}-bold"),
     ):
         rel_id = f"rId{next_id}"
         next_id += 1
@@ -773,10 +779,19 @@ def build(bundle_dir: Path, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     document.save(output)
     font_dir = Path(__file__).resolve().parent.parent / "assets" / "fonts"
-    embed_poppins(
+    embed_font_family(
         output,
+        BODY_FONT,
         font_dir / "Poppins-Regular.ttf",
         font_dir / "Poppins-Bold.ttf",
+        "origin-sculpture-poppins",
+    )
+    embed_font_family(
+        output,
+        HEADING_FONT,
+        font_dir / "LibreBaskerville-Regular.ttf",
+        font_dir / "LibreBaskerville-Bold.ttf",
+        "origin-sculpture-libre-baskerville",
     )
     from verify_publish_docx import verify_publish_docx
 

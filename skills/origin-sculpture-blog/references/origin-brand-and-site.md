@@ -2,7 +2,7 @@
 
 ## Brand position and reader
 
-Write for architects, landscape designers, hospitality teams, developers, art consultants, and private buyers evaluating a substantial sculpture project. Present Origin Sculpture as a practical manufacturing and project partner. Let process detail, material knowledge, samples, drawings, and project evidence carry authority.
+Write for architects, landscape designers, hospitality teams, developers, art consultants, and private buyers evaluating a substantial sculpture project. Assume many readers are not fabrication specialists. Present Origin Sculpture as a practical manufacturing and project partner. Let understandable choices, relevant site pages, material knowledge, samples, drawings, and verified project evidence carry authority.
 
 Default public language: American English. Default planning/review language: Chinese.
 
@@ -13,6 +13,8 @@ Default public language: American English. Default planning/review language: Chi
 - Concrete about setting, viewing distance, light, touch, weather, drainage, fabrication, finish, installation, and care.
 - Honest about tradeoffs. A finish can improve an outcome but cannot rescue the wrong alloy, substrate, coating system, drainage detail, or maintenance plan.
 - Invite consultation after giving the reader enough information to make progress independently.
+- Translate technical language into customer consequences. State what the term means, why the customer should care, and what they should approve or ask next.
+- For custom-process, ordering, service, and company topics, lead from Origin's current site structure and the customer's journey. Do not spend most of the article narrating internal production stages, quality acronyms, engineering coordination, or workshop controls.
 
 ## Site facts and canonical patterns
 
@@ -26,7 +28,7 @@ Use the live sitemap because product handles and titles may contain legacy spell
 
 ## Published format baseline
 
-The current live structural baseline for release 2.4.1 is `https://originsculpture.com/blogs/news/sculpture-finish-guide`, verified 2026-08-21. Preserve its theme-rendered H1/body hierarchy and clean Origin article rhythm while adapting sections to the new topic. The corresponding final-upload Word appearance is locked separately in `word-output.md` and `assets/format-reference/latest-format-page-1.png`.
+The current live structural baseline for release 2.4.2 is `https://originsculpture.com/blogs/news/sculpture-finish-guide`, verified 2026-08-21. Preserve its theme-rendered H1/body hierarchy and clean Origin article rhythm while adapting sections to the new topic. The corresponding final-upload Word appearance is locked separately in `word-output.md` and `assets/format-reference/latest-format-page-1.png`.
 
 The supplied 12 indexed examples generally use:
 

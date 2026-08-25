@@ -1,4 +1,4 @@
-# Blog—ORS—V2.4.1 release lock
+# Blog—ORS—V2.4.2 release lock
 
 This file is the merchant-approved, fail-closed contract for this release. The detailed references remain authoritative for implementation. If any generated artifact conflicts with this lock, stop and fix the artifact; never silently downgrade, improvise, or substitute a generic workflow.
 
@@ -20,6 +20,7 @@ Any content, metadata, link, image, source, or target change invalidates the old
 
 - Public copy is natural American English; planning and review notes are Chinese by default.
 - Classify before drafting: Pillar Blog `1,800–2,500` useful body words; Supporting Blog `1,000–1,600`. The declared tier is a hard gate.
+- Also classify `editorialMode` before drafting. `site-led` covers custom process, ordering, service, company, and working-with-Origin topics; it is written for ordinary buyers, grounded in current Origin site pages, and keeps technical/process explanation to about `20–30%`. `expert-led` covers materials, finishes, trends, inspiration, maintenance, installation, and site planning; professional terms are allowed when they are useful, but define them on first use and connect each one to a customer decision.
 - Answer the governing question within the first 80 words. Use one theme-rendered H1, decision-led H2s, parallel H3s, useful comparison/checklist devices, concise genuine FAQs, and a restrained project CTA.
 - Optimize for one reader task. Add three to eight natural long-tail/supporting queries only where they improve clarity; never stuff exact-match phrases.
 - Keep one evidence-backed, topic-specific Origin experience section at `10–20%` of body words. Its heading must change with the topic; `Why Choose Origin` is forbidden.
@@ -34,15 +35,16 @@ Any content, metadata, link, image, source, or target change invalidates the old
 
 ## Locked image rules
 
-- Normally use four to eight useful images including the cover. Prefer relevant, verifiable Origin-owned product, installed-setting, workshop, sample-review, packing, and installation photographs.
-- Use more real-setting context where it helps the reader. Generated photorealistic scenes are allowed only as disclosed editorial examples and must never be described as a completed Origin project or client installation.
+- Normally use four to eight useful images including the cover. AI-generated photorealistic environment, material, and process scenes are the default primary visual system: at least `60%` of the image manifest, with the cover normally a generated environment scene.
+- Do not use a laptop, phone, webpage, storefront UI, gallery grid, visible logo, watermark, or generated text as the primary scene. Reject obvious anatomical, scale, material, fabrication, or installation errors during visual QA.
+- Use no more than two Origin-owned product/project images by default, only as relevant evidence. Generated scenes must be disclosed as editorial examples and must never be described as completed Origin projects or client installations.
 - Images need specific alt text, stable slots, exact public-heading placement, PNG for Word, and WebP for Shopify. Distribute images by reader need rather than clustering them.
 
 ## Locked Word format
 
 - Visible content only: cover, one public title, article prose, H2/H3, tables, lists, contextual links, and approved images. Exclude SEO notes, sources, review banners, metadata tables, approval codes, headers, footers, page numbers, watermarks, comments, tracked changes, and extra cover/review pages.
 - Every visible character is black `#000000`. Hyperlinks are black with a single underline.
-- Use only the custom Origin styles: `Origin Title` (New York 33 pt), `Origin H2` (New York 27 pt), `Origin H3` (New York 16.5 pt), `Origin Body`/`Origin Bullet`/`Origin Number` (Poppins 12.5 pt), and `Origin Publish Table` (Poppins 10.5 pt). Embed bundled Poppins regular and bold.
+- Use only the custom Origin styles: `Origin Title` (Libre Baskerville 33 pt), `Origin H2` (Libre Baskerville 27 pt), `Origin H3` (Libre Baskerville 16.5 pt), `Origin Body`/`Origin Bullet`/`Origin Number` (Poppins 12.5 pt), and `Origin Publish Table` (Poppins 10.5 pt). Embed bundled Libre Baskerville and Poppins regular and bold. A system-font fallback is a blocker even if the declared style name looks correct.
 - US Letter; margins 0.72 in top/bottom and 0.90 in left/right. First visible block is a 6.7 in cover, immediately followed by the black public title and black Poppins opening prose.
 - Body images default to 5.5 in. The final `project-review` image defaults to 4.5 in and stays with the complete closing CTA section. Fix blank pages, sparse orphan final pages, orphan headings, clipped tables, missing images, and font fallback before review.
 - `scripts/build_publish_docx.py` is the only generator. `scripts/verify_publish_docx.py --bundle` and full-page rendered visual inspection are mandatory. If the workspace document runtime, bundled fonts, renderer, builder, or verifier is unavailable, stop the DOCX step; never use a generic Word style or ad hoc fallback.

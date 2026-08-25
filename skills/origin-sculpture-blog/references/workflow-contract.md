@@ -28,6 +28,7 @@ Use `origin-blog-runs/<handle>/` under the user's working directory. Keep the co
   "author": "Origin Sculpture",
   "publicationAction": "create",
   "contentTier": "pillar",
+  "editorialMode": "site-led",
   "tags": ["Buying Guide", "Sculpture Finish"],
   "blogFilters": ["Sculpture Materials Knowledge Center"],
   "templateSuffix": null,
@@ -46,6 +47,11 @@ Use `origin-blog-runs/<handle>/` under the user's working directory. Keep the co
 - `supporting`: one narrow reader task with 1,000–1,600 public body words.
 
 Choose the tier from search intent and scope before drafting. Do not select a tier after writing merely to make an out-of-range article pass.
+
+`editorialMode` is required:
+
+- `site-led`: custom process, ordering, consultation, service, company, and working-with-Origin topics. Use customer-readable language, current Origin site anchors, and normally no more than about 20–30% technical/process explanation.
+- `expert-led`: material, finish, trend, inspiration, maintenance, installation, and site-planning topics. Professional terms are allowed when useful, but define them and connect them to practical decisions.
 
 `blogFilters` accepts one primary value and at most one genuinely useful secondary value from the live Origin choices:
 
@@ -72,12 +78,16 @@ When the bundle uses local images, use `image-assets.json` instead of a public `
     "png": "images/article-cover.png",
     "webp": "images/article-cover.webp",
     "placement": "Shopify article cover image",
-    "alt": "Specific descriptive alt text"
+    "alt": "Specific descriptive alt text",
+    "sourceType": "generated-editorial",
+    "visualRole": "environment-scene"
   }
 ]
 ```
 
 `png` is required for the portable Word artifact and is hash-bound with the review bundle. `webp` is required and is the only format published to Shopify. Every non-cover `placement` must be `Before <exact public H2/H3>` or `After <exact public H2/H3>`. Reference inline assets in `article.html` as `origin-asset://<slot>`. The publisher uploads the approved WebP bytes to Shopify Files after confirmation, replaces only those placeholders in memory, and uses the `cover` slot as the article image. Do not use a local filesystem path in publishable HTML.
+
+Every image needs a `sourceType`: `generated-editorial`, `origin-owned`, or `user-provided`. Every image also needs a `visualRole`: `environment-scene`, `process-scene`, `material-detail`, or `product-evidence`. The cover defaults to a `generated-editorial` `environment-scene`; at least 60% of all image assets must be generated editorial scenes/details, and no more than two may use the `product-evidence` role by default. A screen, webpage, catalog UI, visible logo, watermark, or generated text cannot be the primary scene.
 
 ## `link-plan.json` schema
 

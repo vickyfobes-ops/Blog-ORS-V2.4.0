@@ -1,4 +1,4 @@
 interface:
-  display_name: "Blog—ORS—V2.4.1"
+  display_name: "Blog—ORS—V2.4.2"
   short_description: "SEO/GEO写作、Word审核、自然内链与Shopify安全发布"
-  default_prompt: "请使用 $origin-sculpture-blog 接收一个英文选题，按 Pillar/Supporting 层级、真实经验、场景图片和自然内链规则生成最终上传版 Word；Word 必须由统一脚本生成、使用最新全黑 Origin 格式并通过结构与逐页视觉校验。只有收到当前哈希的精确确认码后才能创建或更新 Shopify 文章。"
+  default_prompt: "请使用 $origin-sculpture-blog 接收一个英文选题，先确定 Pillar/Supporting 和 site-led/expert-led，再按真实经验、以 AI 场景图为主、自然内链和客户可读性规则生成最终上传版 Word；Word 必须由统一脚本生成，嵌入 Libre Baskerville 与 Poppins，使用最新全黑 Origin 格式并通过结构与逐页视觉校验。只有收到当前哈希的精确确认码后才能创建或更新 Shopify 文章。"
