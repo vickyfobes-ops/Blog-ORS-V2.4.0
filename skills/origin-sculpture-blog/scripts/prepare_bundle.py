@@ -117,7 +117,7 @@ PLACEHOLDER_PATTERNS = [
     r"shopifypreview\.com",
     r"preview_theme_id=",
 ]
-USER_AGENT = "OriginSculptureBlogSkill/2.4.3 (+https://originsculpture.com)"
+USER_AGENT = "OriginSculptureBlogSkill/2.4.4 (+https://originsculpture.com)"
 
 
 def validate_content_tier(meta: dict) -> tuple[str, tuple[int, int]]:

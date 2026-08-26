@@ -4,8 +4,8 @@
 The test never calls Shopify or the public internet. It creates a realistic
 local review bundle, runs the publication gate, builds and verifies a DOCX,
 renders it with the Codex document renderer, compares the locked first-page
-typography/layout region, and proves that known-invalid bundles and DOCX files
-are rejected.
+typography/layout geometry with cross-platform raster tolerance, and proves
+that known-invalid bundles, DOCX files, and material visual drift are rejected.
 """
 
 from __future__ import annotations
@@ -23,11 +23,15 @@ import zipfile
 from pathlib import Path
 
 
-SKILL_VERSION = "2.4.3"
+SKILL_VERSION = "2.4.4"
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = SKILL_ROOT / "scripts"
 REFERENCE_PAGE = SKILL_ROOT / "assets" / "format-reference" / "latest-format-page-1.png"
-VISUAL_DIFF_LIMIT = 0.010
+RAW_PIXEL_WARNING_LIMIT = 0.010
+TOLERANT_UNMATCHED_INK_LIMIT = 0.200
+COARSE_LAYOUT_DIFF_LIMIT = 0.060
+MIN_RENDERED_PAGES = 8
+MAX_RENDERED_PAGES = 12
 VISUAL_QA_KEYS = (
     "inspected",
     "noScreenUiTextLogo",
@@ -544,8 +548,8 @@ def find_renderer(explicit: Path | None) -> Path:
     return max(candidates, key=lambda path: path.stat().st_mtime)
 
 
-def compare_rendered_first_page(rendered_page: Path) -> float:
-    from PIL import Image, ImageChops, ImageStat
+def first_page_visual_metrics(rendered_page: Path) -> dict[str, float | bool]:
+    from PIL import Image, ImageChops, ImageFilter, ImageStat
 
     if not REFERENCE_PAGE.is_file():
         raise SelfTestError(f"locked format reference is missing: {REFERENCE_PAGE}")
@@ -559,15 +563,71 @@ def compare_rendered_first_page(rendered_page: Path) -> float:
     top = int(reference.height * 0.42)
     reference = reference.crop((0, top, reference.width, reference.height))
     rendered = rendered.crop((0, top, rendered.width, rendered.height))
-    reference_mask = reference.point(lambda value: 0 if value < 180 else 255)
-    rendered_mask = rendered.point(lambda value: 0 if value < 180 else 255)
-    difference = ImageChops.difference(reference_mask, rendered_mask)
-    ratio = ImageStat.Stat(difference).mean[0] / 255.0
-    if ratio > VISUAL_DIFF_LIMIT:
+    # Use white-on-black masks so MaxFilter expands visible ink. A raw pixel
+    # difference is useful diagnostics, but it is not portable across Word,
+    # LibreOffice, Windows ClearType, macOS antialiasing, and PDF rasterizers.
+    reference_mask = reference.point(lambda value: 255 if value < 180 else 0)
+    rendered_mask = rendered.point(lambda value: 255 if value < 180 else 0)
+    raw_difference = ImageChops.difference(reference_mask, rendered_mask)
+    raw_pixel_diff = ImageStat.Stat(raw_difference).mean[0] / 255.0
+
+    # Permit small glyph-edge and baseline shifts while still measuring whether
+    # the same title/body ink occupies the same region of the page.
+    reference_dilated = reference_mask.filter(ImageFilter.MaxFilter(11))
+    rendered_dilated = rendered_mask.filter(ImageFilter.MaxFilter(11))
+    unmatched_reference = ImageChops.multiply(reference_mask, ImageChops.invert(rendered_dilated))
+    unmatched_rendered = ImageChops.multiply(rendered_mask, ImageChops.invert(reference_dilated))
+    reference_ink = ImageStat.Stat(reference_mask).sum[0] / 255.0
+    rendered_ink = ImageStat.Stat(rendered_mask).sum[0] / 255.0
+    unmatched_ink = (
+        ImageStat.Stat(unmatched_reference).sum[0] + ImageStat.Stat(unmatched_rendered).sum[0]
+    ) / 255.0
+    tolerant_unmatched_ink = unmatched_ink / max(1.0, reference_ink + rendered_ink)
+
+    # A low-resolution occupancy comparison catches large title, wrapping, or
+    # vertical-flow changes without failing on renderer-specific glyph pixels.
+    reference_coarse = reference_mask.resize((96, 72), Image.Resampling.BOX)
+    rendered_coarse = rendered_mask.resize((96, 72), Image.Resampling.BOX)
+    coarse_layout_diff = (
+        ImageStat.Stat(ImageChops.difference(reference_coarse, rendered_coarse)).mean[0] / 255.0
+    )
+    return {
+        "rawPixelDiff": raw_pixel_diff,
+        "rawPixelWarning": raw_pixel_diff > RAW_PIXEL_WARNING_LIMIT,
+        "tolerantUnmatchedInk": tolerant_unmatched_ink,
+        "coarseLayoutDiff": coarse_layout_diff,
+    }
+
+
+def assert_visual_geometry(metrics: dict[str, float | bool], *, label: str) -> None:
+    unmatched = float(metrics["tolerantUnmatchedInk"])
+    coarse = float(metrics["coarseLayoutDiff"])
+    if unmatched > TOLERANT_UNMATCHED_INK_LIMIT or coarse > COARSE_LAYOUT_DIFF_LIMIT:
         raise SelfTestError(
-            f"rendered first-page typography/layout drift is {ratio:.3%}; limit is {VISUAL_DIFF_LIMIT:.3%}"
+            f"{label} has material first-page typography/layout drift: "
+            f"tolerant unmatched ink {unmatched:.3%} "
+            f"(limit {TOLERANT_UNMATCHED_INK_LIMIT:.3%}), "
+            f"coarse layout difference {coarse:.3%} "
+            f"(limit {COARSE_LAYOUT_DIFF_LIMIT:.3%})"
         )
-    return ratio
+
+
+def make_rasterizer_variant(source: Path, target: Path) -> None:
+    from PIL import Image, ImageFilter
+
+    image = Image.open(source).convert("L")
+    canvas = Image.new("L", image.size, 255)
+    canvas.paste(image.filter(ImageFilter.GaussianBlur(0.7)), (2, 3))
+    canvas.save(target)
+
+
+def make_material_layout_drift(source: Path, target: Path) -> None:
+    from PIL import Image
+
+    image = Image.open(source).convert("L")
+    canvas = Image.new("L", image.size, 255)
+    canvas.paste(image, (0, 60))
+    canvas.save(target)
 
 
 def tamper_heading_font(source: Path, target: Path) -> None:
@@ -601,7 +661,29 @@ def run_self_test(work_dir: Path, renderer: Path) -> dict[str, object]:
     page_one = render_dir / "page-1.png"
     if not page_one.is_file():
         raise SelfTestError("document renderer did not create page-1.png")
-    visual_ratio = compare_rendered_first_page(page_one)
+    rendered_pages = list(render_dir.glob("page-*.png"))
+    if not MIN_RENDERED_PAGES <= len(rendered_pages) <= MAX_RENDERED_PAGES:
+        raise SelfTestError(
+            f"rendered page count is {len(rendered_pages)}; expected "
+            f"{MIN_RENDERED_PAGES}-{MAX_RENDERED_PAGES} for the locked fixture"
+        )
+    visual_metrics = first_page_visual_metrics(page_one)
+    assert_visual_geometry(visual_metrics, label="rendered document")
+
+    rasterizer_variant = work_dir / "accepted-rasterizer-variation.png"
+    make_rasterizer_variant(page_one, rasterizer_variant)
+    rasterizer_metrics = first_page_visual_metrics(rasterizer_variant)
+    assert_visual_geometry(rasterizer_metrics, label="simulated cross-platform rasterizer variation")
+
+    material_drift = work_dir / "rejected-material-layout-drift.png"
+    make_material_layout_drift(page_one, material_drift)
+    material_drift_metrics = first_page_visual_metrics(material_drift)
+    try:
+        assert_visual_geometry(material_drift_metrics, label="deliberate material layout mutation")
+    except SelfTestError:
+        material_layout_drift_rejected = True
+    else:
+        raise SelfTestError("visual gate accepted a deliberately shifted first-page layout")
 
     invalid_docx = work_dir / "invalid-heading-font.docx"
     tamper_heading_font(output_docx, invalid_docx)
@@ -641,8 +723,13 @@ def run_self_test(work_dir: Path, renderer: Path) -> dict[str, object]:
         "renderer": str(renderer),
         "positiveBundleGate": "PASS",
         "docxBuildAndStructuralVerification": "PASS",
-        "renderedPages": len(list(render_dir.glob("page-*.png"))),
-        "firstPageVisualDiff": round(visual_ratio, 6),
+        "renderedPages": len(rendered_pages),
+        "firstPageVisualMetrics": {
+            key: round(value, 6) if isinstance(value, float) else value
+            for key, value in visual_metrics.items()
+        },
+        "crossPlatformRasterVariationAccepted": True,
+        "materialLayoutDriftRejected": material_layout_drift_rejected,
         "tamperedDocxRejected": True,
         "invalidBundleRejected": True,
         "fontAssets": verify_font_assets(),

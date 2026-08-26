@@ -2,7 +2,7 @@
 name: origin-sculpture-blog
 description: Create, review, revise, validate, publish, and safely update source-backed American English Shopify blog articles for Origin Sculpture through a strict three-step workflow. Use when a user provides a sculpture topic, asks for an Origin Sculpture SEO/GEO article or outline, supplies a revised Markdown/HTML/DOCX draft, requests relevant Origin Sculpture internal links with at least three product links, asks for pre-publish QA, wants to revise an existing Shopify article, or explicitly approves a prepared create/update action. Trigger on Origin Sculpture blog, 雕塑博客自动化、写博客、审核文章、修改原文章、添加内链、上传博客、发布 Shopify 文章, or explicit $origin-sculpture-blog invocation.
 metadata:
-  version: "2.4.3"
+  version: "2.4.4"
 ---
 
 # Origin Sculpture Blog
@@ -11,7 +11,7 @@ Turn one topic or existing Origin article into an approval-ready, internally lin
 
 ## Load the required standards
 
-- Read [references/release-lock-v2.4.3.md](references/release-lock-v2.4.3.md) first for every request. It is the release-level, fail-closed contract for the latest merchant-approved live/article and Word format.
+- Read [references/release-lock-v2.4.4.md](references/release-lock-v2.4.4.md) first for every request. It is the release-level, fail-closed contract for the latest merchant-approved live/article and Word format.
 - Read [references/workflow-contract.md](references/workflow-contract.md) for every request.
 - Read [references/origin-brand-and-site.md](references/origin-brand-and-site.md) before research, drafting, linking, or publication.
 - Read [references/editorial-seo-geo.md](references/editorial-seo-geo.md) before outlining or drafting.
@@ -164,7 +164,7 @@ For first-time setup, read `references/shopify-setup.md`, configure the protecte
 
 ## Use the scripts as hard controls
 
-- `scripts/self_test.py`: after every fresh install or version update, build a clean local fixture bundle, run the positive and negative gates, generate and verify a DOCX, render it, and compare the locked first-page typography/layout region. It never contacts Shopify. Do not use the installed version for production until this command returns `PASS`.
+- `scripts/self_test.py`: after every fresh install or version update, build a clean local fixture bundle, run the positive and negative gates, generate and verify a DOCX, render it, and compare the locked first-page typography/layout geometry with cross-platform raster tolerance. Raw pixel drift is diagnostic; structural violations or material layout drift still fail closed. It never contacts Shopify. Do not use the installed version for production until this command returns `PASS`.
 - `scripts/site_inventory.py`: crawl the canonical sitemap and rank candidate links.
 - `scripts/prepare_bundle.py`: audit structure, content-tier length, marked/evidenced Origin experience, metadata, link counts, source files, unsafe HTML, canonical inventory membership, live link status, and any captured update target; create a content hash and action-specific approval phrase.
 - `scripts/build_publish_docx.py` and `scripts/verify_publish_docx.py`: generate the one approved final-upload Word format and fail closed on theme colors, default Word styles, font drift, wrong first-page order, missing image alt text, or layout-token drift.

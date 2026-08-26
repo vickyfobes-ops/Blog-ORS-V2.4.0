@@ -1,4 +1,4 @@
-# Blog—ORS—V2.4.3
+# Blog—ORS—V2.4.4
 
 Origin Sculpture 专用 Codex Blog 自动化 Skill。
 
@@ -16,7 +16,7 @@ Origin Sculpture 专用 Codex Blog 自动化 Skill。
 python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo vickyfobes-ops/Blog-ORS-V2.4.0 \
   --path skills/origin-sculpture-blog \
-  --ref codex/origin-sculpture-blog-v2.4.3
+  --ref codex/origin-sculpture-blog-v2.4.4
 ```
 
 安装完成后，Skill 会在下一轮对话中可用，调用名为：
@@ -44,13 +44,13 @@ $origin-sculpture-blog
 
 ## 安装后强制自检
 
-V2.4.3 把“能安装”和“能稳定生成正确成品”分开验证。全新安装或更新后，必须先运行：
+V2.4.4 把“能安装”和“能稳定生成正确成品”分开验证。全新安装或更新后，必须先运行：
 
 ```bash
 python3 skills/origin-sculpture-blog/scripts/self_test.py
 ```
 
-自检只在本机创建隔离测试包，不读取店铺凭证、不访问 Shopify、不上传或发布内容。只有输出 `"status": "PASS"` 后，才允许处理正式文章。它会验证固定字体、文章规则、AI 场景图比例、人工视觉确认字段、Word 生成与结构、页面渲染对比，并确认错误字体和不合格文章能够被拦截。
+自检只在本机创建隔离测试包，不读取店铺凭证、不访问 Shopify、不上传或发布内容。只有输出 `"status": "PASS"` 后，才允许处理正式文章。它会验证固定字体、文章规则、AI 场景图比例、人工视觉确认字段、Word 生成与结构、页面渲染对比，并确认错误字体、不合格文章和明显版式漂移能够被拦截。V2.4.4 使用跨平台容差视觉几何校验：Windows/Mac 的字体抗锯齿像素差只作为诊断，结构错误或实质性布局偏移仍会失败。
 
 ## 主要安全控制
 

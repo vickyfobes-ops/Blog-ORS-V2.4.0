@@ -1,4 +1,4 @@
-# Blog—ORS—V2.4.3 release lock
+# Blog—ORS—V2.4.4 release lock
 
 This file is the merchant-approved, fail-closed contract for this release. The detailed references remain authoritative for implementation. If any generated artifact conflicts with this lock, stop and fix the artifact; never silently downgrade, improvise, or substitute a generic workflow.
 
@@ -11,7 +11,8 @@ This file is the merchant-approved, fail-closed contract for this release. The d
 ## Locked installation reliability gate
 
 - After every fresh installation or version update, run `scripts/self_test.py` with the Codex workspace document Python runtime. It must return `PASS` before the Skill handles a production article.
-- The self-test must use only the installed copy and an isolated temporary directory. It must pass a valid bundle, reject an invalid editorial/image bundle, build and structurally verify the final-upload DOCX, reject a tampered-font DOCX, render the document, and keep the locked first-page typography/layout difference within the script threshold.
+- The self-test must use only the installed copy and an isolated temporary directory. It must pass a valid bundle, reject an invalid editorial/image bundle, build and structurally verify the final-upload DOCX, reject a tampered-font DOCX, render the document, accept a small simulated renderer/rasterizer variation, and reject a deliberately shifted first-page layout.
+- Raw pixel difference against the Mac-created reference is diagnostic only because Word, LibreOffice, Windows ClearType, macOS antialiasing, and PDF rasterizers do not produce identical glyph pixels. Hard visual failure uses tolerant unmatched-ink and coarse layout geometry together. Structural font, size, color, order, embedding, and style violations remain unconditional blockers.
 - The self-test never reads credentials, calls Shopify, uploads files, creates an article, or modifies a production bundle. A missing document renderer, font asset, runtime dependency, or failed negative test is a release blocker—not a reason to skip the gate.
 
 ## Locked operator workflow
@@ -68,7 +69,7 @@ Any content, metadata, link, image, source, or target change invalidates the old
 ## Enforcement map
 
 - `scripts/site_inventory.py` locks canonical URL discovery.
-- `scripts/self_test.py` locks install-time positive/negative bundle behavior, portable DOCX generation, font rejection, rendering, and first-page visual regression.
+- `scripts/self_test.py` locks install-time positive/negative bundle behavior, portable DOCX generation, font rejection, rendering, cross-platform raster tolerance, and material first-page layout regression.
 - `scripts/prepare_bundle.py` locks tier length, experience ratio/evidence, structure, HTML safety, links, image manifest, metadata, update target, hashes, and action-specific approval phrases.
 - `scripts/build_publish_docx.py` plus `scripts/verify_publish_docx.py` lock the approved Word appearance and content order.
 - `scripts/shopify_publish.py` locks store identity, Blog Filter/template handling, exact approval, duplicate/stale-target protection, API backoff, mutation non-retry, and the daily live-publication cap.
