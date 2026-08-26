@@ -1,4 +1,4 @@
-# Blog—ORS—V2.4.4 release lock
+# Blog—ORS—V2.4.5 release lock
 
 This file is the merchant-approved, fail-closed contract for this release. The detailed references remain authoritative for implementation. If any generated artifact conflicts with this lock, stop and fix the artifact; never silently downgrade, improvise, or substitute a generic workflow.
 
@@ -42,11 +42,11 @@ Any content, metadata, link, image, source, or target change invalidates the old
 
 ## Locked image rules
 
-- Normally use four to eight useful images including the cover. AI-generated photorealistic environment, material, and process scenes are the default primary visual system: at least `60%` of the image manifest, with the cover normally a generated environment scene.
+- Use six to eight useful images including the cover. Every article includes two or three directly relevant Origin-owned product/project images selected from current Origin pages. AI-generated photorealistic environment, material, and process scenes remain the primary visual system: at least `60%` of the image manifest, with the cover normally a generated environment scene.
 - Do not use a laptop, phone, webpage, storefront UI, gallery grid, visible logo, watermark, or generated text as the primary scene. Reject obvious anatomical, scale, material, fabrication, or installation errors during visual QA.
-- Use no more than two Origin-owned product/project images by default, only as relevant evidence. Generated scenes must be disclosed as editorial examples and must never be described as completed Origin projects or client installations.
+- For each Origin-owned image, use the original media rather than a page screenshot, record its canonical `sourcePage` and exact `sourceImageUrl`, and use that source page naturally as a contextual internal link. Origin-owned images use `product-evidence`; generated scenes must be disclosed as editorial examples and must never be described as completed Origin projects or client installations.
 - Record `visualQa.inspected`, `visualQa.noScreenUiTextLogo`, `visualQa.realisticMaterialScale`, and `visualQa.sectionRelevant` as true for every approved asset only after visual inspection. Any missing or false value blocks preparation.
-- Images need specific alt text, stable slots, exact public-heading placement, PNG for Word, and WebP for Shopify. Distribute images by reader need rather than clustering them.
+- Normalize every approved image with `scripts/normalize_image_asset.py` into a 1600×900 sRGB PNG for Word and WebP for Shopify. Images need specific alt text, stable slots, exact public-heading placement, and a visually approved focal crop. Distribute images by reader need rather than clustering them.
 
 ## Locked Word format
 
@@ -69,6 +69,7 @@ Any content, metadata, link, image, source, or target change invalidates the old
 ## Enforcement map
 
 - `scripts/site_inventory.py` locks canonical URL discovery.
+- `scripts/normalize_image_asset.py` locks the 16:9, 1600×900, metadata-stripped PNG/WebP image pair.
 - `scripts/self_test.py` locks install-time positive/negative bundle behavior, portable DOCX generation, font rejection, rendering, cross-platform raster tolerance, and material first-page layout regression.
 - `scripts/prepare_bundle.py` locks tier length, experience ratio/evidence, structure, HTML safety, links, image manifest, metadata, update target, hashes, and action-specific approval phrases.
 - `scripts/build_publish_docx.py` plus `scripts/verify_publish_docx.py` lock the approved Word appearance and content order.

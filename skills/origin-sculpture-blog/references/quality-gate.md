@@ -17,7 +17,9 @@
 - Technical content lacks at least two authoritative non-Origin sources and claim mapping.
 - `contentTier` is missing/invalid, a Pillar Blog falls outside 1,800–2,500 words, or a Supporting Blog falls outside 1,000–1,600 words.
 - `editorialMode` is missing or is not exactly `site-led` or `expert-led`.
-- An image asset lacks `sourceType`/`visualRole`, generated editorial images are below 60%, the cover is not an environment scene, or more than two images default to product-evidence. A non-generated cover produces a warning and requires visual review; AI imagery must still remain the majority.
+- The bundle does not contain 6–8 images, does not contain exactly 2–3 relevant Origin-owned site images, generated editorial images are below 60%, the cover is not an environment scene, or more than three images use product-evidence. A non-generated cover produces a warning and requires visual review; AI imagery must still remain the majority.
+- An Origin-owned image lacks a canonical Origin `sourcePage`, lacks the exact HTTPS Origin/Shopify `sourceImageUrl`, uses a webpage screenshot, is not marked `product-evidence`, or its source page is absent from the article's contextual links.
+- A PNG/WebP pair is missing, cannot be decoded, has the wrong real format, or is not normalized to 1600×900 through the approved image script.
 - Visual QA finds a laptop/phone screen, webpage, storefront UI, gallery grid, visible logo, watermark, generated text, or an obvious anatomy/material/fabrication/installation error as the primary scene.
 - Any image has not actually been opened and reviewed, or one of `visualQa.inspected`, `visualQa.noScreenUiTextLogo`, `visualQa.realisticMaterialScale`, and `visualQa.sectionRelevant` is missing or false.
 - The Origin experience marker pair is missing/duplicated, the marked section is outside 10–20% of body words, lacks a dynamic heading/clear Origin attribution, or connects fewer than two topic-relevant experience signals.
@@ -51,7 +53,7 @@
 - Blog Filter represents the article's dominant reader task; incidental keywords do not create noisy secondary classifications.
 - The public title, SEO title, and opening answer describe the same promise.
 - Image briefs specify scene/function, aspect ratio, and useful alt text.
-- AI-generated photorealistic scenes are the primary visual system; Origin-owned images are used sparingly as evidence. Generated scenarios are disclosed in `image-plan.md` and never represented as completed Origin projects.
+- AI-generated photorealistic scenes are the primary visual system; two or three Origin-owned images provide directly relevant product/project evidence. Generated scenarios are disclosed in `image-plan.md` and never represented as completed Origin projects.
 
 ## Word artifact checks
 

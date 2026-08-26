@@ -35,6 +35,8 @@ IMAGE_VISUAL_QA_KEYS = (
     "realisticMaterialScale",
     "sectionRelevant",
 )
+NORMALIZED_IMAGE_SIZE = (1600, 900)
+ORIGIN_IMAGE_SOURCE_HOSTS = {"originsculpture.com", "www.originsculpture.com", "cdn.shopify.com"}
 EXPERIENCE_START = "<!-- origin-experience:start -->"
 EXPERIENCE_END = "<!-- origin-experience:end -->"
 EXPERIENCE_SIGNAL_GROUPS = {
@@ -117,7 +119,7 @@ PLACEHOLDER_PATTERNS = [
     r"shopifypreview\.com",
     r"preview_theme_id=",
 ]
-USER_AGENT = "OriginSculptureBlogSkill/2.4.4 (+https://originsculpture.com)"
+USER_AGENT = "OriginSculptureBlogSkill/2.4.5 (+https://originsculpture.com)"
 
 
 def validate_content_tier(meta: dict) -> tuple[str, tuple[int, int]]:
@@ -363,6 +365,26 @@ def validate_link(url: str) -> tuple[bool, str]:
         return False, str(exc)
 
 
+def validate_normalized_image(path: Path, expected_format: str, slot: str) -> str | None:
+    try:
+        from PIL import Image
+    except ImportError:
+        return "run prepare_bundle.py with the Codex document Python runtime; Pillow is required for image QA"
+    try:
+        with Image.open(path) as image:
+            image.load()
+            if image.format != expected_format:
+                return f"image asset '{slot}' is not a real {expected_format} file: {path.name}"
+            if image.size != NORMALIZED_IMAGE_SIZE:
+                return (
+                    f"image asset '{slot}' must be normalized to "
+                    f"{NORMALIZED_IMAGE_SIZE[0]}x{NORMALIZED_IMAGE_SIZE[1]}; found {image.width}x{image.height}"
+                )
+    except Exception as exc:
+        return f"image asset '{slot}' could not be decoded: {path.name}: {exc}"
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("bundle", type=Path)
@@ -481,6 +503,8 @@ def main() -> int:
                 source_type = str(item.get("sourceType", "")).strip().lower()
                 visual_role = str(item.get("visualRole", "")).strip().lower()
                 visual_qa = item.get("visualQa")
+                source_page = str(item.get("sourcePage", "")).strip()
+                source_image_url = str(item.get("sourceImageUrl", "")).strip()
                 if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slot):
                     blockers.append(f"image asset {index + 1} has an invalid slot")
                     continue
@@ -500,6 +524,10 @@ def main() -> int:
                     continue
                 if asset_path.suffix.lower() != ".webp":
                     blockers.append(f"publishable image asset must be WebP: {relative}")
+                else:
+                    format_error = validate_normalized_image(asset_path, "WEBP", slot)
+                    if format_error:
+                        blockers.append(format_error)
                 if not png_relative:
                     blockers.append(f"image asset '{slot}' is missing png for the Word artifact")
                 else:
@@ -510,6 +538,9 @@ def main() -> int:
                         elif png_path.suffix.lower() != ".png":
                             blockers.append(f"Word image asset must be PNG: {png_relative}")
                         else:
+                            format_error = validate_normalized_image(png_path, "PNG", slot)
+                            if format_error:
+                                blockers.append(format_error)
                             asset_source_hashes[f"asset:{png_relative}"] = file_hash(png_path)
                     except ValueError as exc:
                         blockers.append(str(exc))
@@ -523,6 +554,31 @@ def main() -> int:
                     blockers.append(
                         f"image asset '{slot}' visualRole must be one of: {', '.join(sorted(IMAGE_VISUAL_ROLES))}"
                     )
+                if source_type == "origin-owned":
+                    if visual_role != "product-evidence":
+                        blockers.append(
+                            f"Origin-owned image asset '{slot}' must use visualRole 'product-evidence'"
+                        )
+                    parsed_source_page = urllib.parse.urlsplit(source_page)
+                    if (
+                        parsed_source_page.scheme != "https"
+                        or normalize_host(source_page) != site_domain
+                        or not parsed_source_page.path.startswith(("/products/", "/blogs/", "/pages/"))
+                    ):
+                        blockers.append(
+                            f"Origin-owned image asset '{slot}' needs a canonical HTTPS sourcePage on originsculpture.com"
+                        )
+                    else:
+                        source_page = canonical_url(source_page, site_domain)
+                    parsed_source_image = urllib.parse.urlsplit(source_image_url)
+                    if (
+                        parsed_source_image.scheme != "https"
+                        or (parsed_source_image.hostname or "").lower() not in ORIGIN_IMAGE_SOURCE_HOSTS
+                        or not re.search(r"\.(?:avif|jpe?g|png|webp)$", parsed_source_image.path, re.I)
+                    ):
+                        blockers.append(
+                            f"Origin-owned image asset '{slot}' needs its HTTPS sourceImageUrl from the Origin/Shopify CDN"
+                        )
                 if not isinstance(visual_qa, dict):
                     blockers.append(f"image asset '{slot}' is missing visualQa review results")
                     visual_qa = {}
@@ -560,6 +616,10 @@ def main() -> int:
                 item["placement"] = placement
                 item["sourceType"] = source_type
                 item["visualRole"] = visual_role
+                if source_page:
+                    item["sourcePage"] = source_page
+                if source_image_url:
+                    item["sourceImageUrl"] = source_image_url
                 item["visualQa"] = {key: visual_qa.get(key) is True for key in IMAGE_VISUAL_QA_KEYS}
                 item["sha256"] = file_hash(asset_path)
                 asset_by_slot[slot] = item
@@ -593,20 +653,28 @@ def main() -> int:
         product_evidence_count = sum(
             item.get("visualRole") == "product-evidence" for item in asset_by_slot.values()
         )
-        if not 4 <= len(asset_by_slot) <= 8:
-            blockers.append(f"use 4–8 approved image assets including the cover; found {len(asset_by_slot)}")
+        origin_owned_count = sum(
+            item.get("sourceType") == "origin-owned" for item in asset_by_slot.values()
+        )
+        if not 6 <= len(asset_by_slot) <= 8:
+            blockers.append(f"use 6–8 approved image assets including the cover; found {len(asset_by_slot)}")
         if generated_ratio < 0.60:
             blockers.append(
                 f"AI editorial scenes must be the primary image source (at least 60%); found {generated_ratio:.1%}"
             )
-        if product_evidence_count > 2:
+        if not 2 <= origin_owned_count <= 3:
             blockers.append(
-                f"use no more than 2 product-evidence images by default; found {product_evidence_count}"
+                f"use 2–3 relevant Origin-owned site images in every article; found {origin_owned_count}"
+            )
+        if product_evidence_count > 3:
+            blockers.append(
+                f"use no more than 3 product-evidence images; found {product_evidence_count}"
             )
     else:
         generated_count = 0
         generated_ratio = 0.0
         product_evidence_count = 0
+        origin_owned_count = 0
 
     review_tokens = markdown_article_words(review)
     html_tokens = comparison_words(" ".join(parsed.text_parts))
@@ -720,6 +788,14 @@ def main() -> int:
         )
     if len(unique_articles) < 2:
         warnings.append(f"normally include at least 2 related article links; found {len(unique_articles)}")
+    for asset in asset_by_slot.values():
+        if asset.get("sourceType") != "origin-owned":
+            continue
+        source_page = str(asset.get("sourcePage", ""))
+        if source_page and source_page not in unique_internal:
+            blockers.append(
+                f"Origin-owned image sourcePage must also appear as a contextual internal link: {source_page}"
+            )
 
     if not isinstance(link_plan, list):
         blockers.append("link-plan.json must contain a JSON array")
@@ -809,6 +885,7 @@ def main() -> int:
             "generatedEditorialImages": generated_count,
             "generatedImageRatio": round(generated_ratio, 4),
             "productEvidenceImages": product_evidence_count,
+            "originOwnedSiteImages": origin_owned_count,
             "experienceWords": experience["words"],
         },
         "contentPolicy": {

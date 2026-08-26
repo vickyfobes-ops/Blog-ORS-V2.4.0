@@ -23,15 +23,15 @@ import zipfile
 from pathlib import Path
 
 
-SKILL_VERSION = "2.4.4"
+SKILL_VERSION = "2.4.5"
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = SKILL_ROOT / "scripts"
 REFERENCE_PAGE = SKILL_ROOT / "assets" / "format-reference" / "latest-format-page-1.png"
 RAW_PIXEL_WARNING_LIMIT = 0.010
 TOLERANT_UNMATCHED_INK_LIMIT = 0.200
 COARSE_LAYOUT_DIFF_LIMIT = 0.060
-MIN_RENDERED_PAGES = 8
-MAX_RENDERED_PAGES = 12
+MIN_RENDERED_PAGES = 10
+MAX_RENDERED_PAGES = 14
 VISUAL_QA_KEYS = (
     "inspected",
     "noScreenUiTextLogo",
@@ -209,16 +209,30 @@ def make_fixture_images(bundle: Path) -> None:
         ((222, 212, 198), (137, 96, 66)),
         ((215, 225, 231), (54, 104, 128)),
         ((235, 228, 215), (88, 88, 82)),
+        ((224, 216, 205), (117, 107, 91)),
+        ((218, 222, 216), (73, 91, 80)),
     ]
     for index, (background, accent) in enumerate(palettes, 1):
-        image = Image.new("RGB", (1672, 941), background)
+        image = Image.new("RGB", (1800, 1200), background)
         draw = ImageDraw.Draw(image)
-        draw.rectangle((0, 650, 1672, 941), fill=tuple(max(0, value - 18) for value in background))
-        draw.ellipse((350 + index * 35, 115, 1040 + index * 45, 805), fill=accent)
-        draw.ellipse((570 + index * 20, 255, 850 + index * 20, 600), fill=background)
-        draw.polygon([(920, 740), (1320, 210), (1450, 740)], fill=tuple(min(255, value + 35) for value in accent))
-        image.save(image_dir / f"fixture-{index}.png", format="PNG", optimize=True)
-        image.save(image_dir / f"fixture-{index}.webp", format="WEBP", quality=82, method=6)
+        draw.rectangle((0, 820, 1800, 1200), fill=tuple(max(0, value - 18) for value in background))
+        draw.ellipse((360 + index * 25, 150, 1080 + index * 35, 920), fill=accent)
+        draw.ellipse((590 + index * 15, 300, 880 + index * 15, 680), fill=background)
+        draw.polygon([(980, 880), (1390, 240), (1540, 880)], fill=tuple(min(255, value + 35) for value in accent))
+        raw_path = image_dir / f"raw-fixture-{index}.png"
+        image.save(raw_path, format="PNG", optimize=True)
+        run(
+            [
+                sys.executable,
+                str(SCRIPTS_DIR / "normalize_image_asset.py"),
+                str(raw_path),
+                "--output-dir",
+                str(image_dir),
+                "--slot",
+                f"fixture-{index}",
+            ]
+        )
+        raw_path.unlink()
 
 
 def build_fixture(bundle: Path) -> None:
@@ -298,13 +312,18 @@ def build_fixture(bundle: Path) -> None:
         "budget, site preparation, or long-term care."
     )
 
-    article.h2("Use Origin's Site to Compare Real Choices, Not Just Process Steps")
+    site_compare_heading = "Use Origin's Site to Compare Real Choices, Not Just Process Steps"
+    article.h2(site_compare_heading)
     article.paragraph(
         "A site-led article should connect advice to pages a customer can actually explore. The "
         "[sculpture materials guide](https://originsculpture.com/blogs/news/sculpture-materials-guide) explains the "
         "main material families, while a [blue fiberglass color sample](https://originsculpture.com/products/original-fiberglass-color-sample-blue-of-001) "
         "gives a specific color reference. These links earn their place because they help the reader compare a "
         "decision; they should not be grouped into a sales paragraph merely to increase link count."
+    )
+    article.image(
+        "origin-product-one",
+        "Origin mirror-polished stainless steel finish sample used as a website product reference",
     )
     article.paragraph(
         "The buyer should leave each section knowing what to look at next. A material page can answer whether a "
@@ -356,7 +375,12 @@ def build_fixture(bundle: Path) -> None:
         "process article."
     )
 
-    article.h2("Common Ways a Custom Sculpture Process Article Loses the Customer")
+    common_heading = "Common Ways a Custom Sculpture Process Article Loses the Customer"
+    article.image(
+        "maintenance-scene",
+        "Sculpture surface being inspected in a clear maintenance setting without text or screens",
+    )
+    article.h2(common_heading)
     article.paragraph(
         "A process article becomes difficult when it lists every workshop stage before explaining what the buyer "
         "needs to decide. Long sections about welding sequences, mold systems, internal support, inspection codes, "
@@ -514,13 +538,37 @@ def build_fixture(bundle: Path) -> None:
             "visualQa": qa_true,
         },
         {
-            "slot": "project-review",
+            "slot": "origin-product-one",
             "png": "images/fixture-4.png",
             "webp": "images/fixture-4.webp",
+            "placement": f"After {site_compare_heading}",
+            "alt": "Origin mirror-polished stainless steel finish sample used as a website product reference",
+            "sourceType": "origin-owned",
+            "visualRole": "product-evidence",
+            "sourcePage": "https://originsculpture.com/products/origin-stainless-steel-color-sample-mirror-polish-sliver-finish-os-009",
+            "sourceImageUrl": "https://originsculpture.com/cdn/shop/files/mirror-polish-silver-stainless-steel-om-009.jpg?v=1782528214",
+            "visualQa": qa_true,
+        },
+        {
+            "slot": "maintenance-scene",
+            "png": "images/fixture-5.png",
+            "webp": "images/fixture-5.webp",
+            "placement": f"Before {common_heading}",
+            "alt": "Sculpture surface being inspected in a clear maintenance setting without text or screens",
+            "sourceType": "generated-editorial",
+            "visualRole": "process-scene",
+            "visualQa": qa_true,
+        },
+        {
+            "slot": "project-review",
+            "png": "images/fixture-6.png",
+            "webp": "images/fixture-6.webp",
             "placement": f"Before {closing_heading}",
             "alt": "Customer and designer reviewing sculpture references and material samples at a clear table",
             "sourceType": "origin-owned",
             "visualRole": "product-evidence",
+            "sourcePage": "https://originsculpture.com/products/original-fiberglass-color-sample-blue-of-001",
+            "sourceImageUrl": "https://originsculpture.com/cdn/shop/files/cobalt-blue-fiberglass-of-001.webp?v=1782529472",
             "visualQa": qa_true,
         },
     ]
@@ -695,6 +743,23 @@ def run_self_test(work_dir: Path, renderer: Path) -> dict[str, object]:
     ):
         raise SelfTestError("verifier failed to reject a DOCX with a tampered heading font")
 
+    invalid_image_bundle = work_dir / "invalid-image-bundle"
+    shutil.copytree(bundle, invalid_image_bundle)
+    from PIL import Image
+
+    invalid_png = invalid_image_bundle / "images" / "fixture-1.png"
+    with Image.open(invalid_png) as image:
+        image.resize((800, 450)).save(invalid_png, format="PNG")
+    invalid_image_result = subprocess.run(
+        [sys.executable, str(prepare), str(invalid_image_bundle)],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    invalid_image_output = invalid_image_result.stdout + invalid_image_result.stderr
+    if invalid_image_result.returncode == 0 or "must be normalized to 1600x900" not in invalid_image_output:
+        raise SelfTestError("publication gate failed to reject a non-normalized image asset")
+
     invalid_bundle = work_dir / "invalid-bundle"
     shutil.copytree(bundle, invalid_bundle)
     invalid_meta = json.loads((invalid_bundle / "meta.json").read_text(encoding="utf-8"))
@@ -712,7 +777,7 @@ def run_self_test(work_dir: Path, renderer: Path) -> dict[str, object]:
     invalid_output = invalid_bundle_result.stdout + invalid_bundle_result.stderr
     if invalid_bundle_result.returncode == 0:
         raise SelfTestError("publication gate accepted a deliberately invalid bundle")
-    for expected in ("editorialMode", "at least 60%"):
+    for expected in ("editorialMode", "at least 60%", "2–3 relevant Origin-owned"):
         if expected not in invalid_output:
             raise SelfTestError(f"invalid bundle rejection did not report {expected!r}")
 
@@ -723,6 +788,10 @@ def run_self_test(work_dir: Path, renderer: Path) -> dict[str, object]:
         "renderer": str(renderer),
         "positiveBundleGate": "PASS",
         "docxBuildAndStructuralVerification": "PASS",
+        "imageAssetNormalization": "PASS",
+        "normalizedImagePairs": int(result.get("counts", {}).get("imageAssets", 0)),
+        "originOwnedSiteImages": int(result.get("counts", {}).get("originOwnedSiteImages", 0)),
+        "generatedImageRatio": result.get("counts", {}).get("generatedImageRatio"),
         "renderedPages": len(rendered_pages),
         "firstPageVisualMetrics": {
             key: round(value, 6) if isinstance(value, float) else value
@@ -731,6 +800,7 @@ def run_self_test(work_dir: Path, renderer: Path) -> dict[str, object]:
         "crossPlatformRasterVariationAccepted": True,
         "materialLayoutDriftRejected": material_layout_drift_rejected,
         "tamperedDocxRejected": True,
+        "invalidImageDimensionsRejected": True,
         "invalidBundleRejected": True,
         "fontAssets": verify_font_assets(),
     }

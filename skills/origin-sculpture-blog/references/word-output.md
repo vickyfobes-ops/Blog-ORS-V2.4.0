@@ -43,6 +43,7 @@ Do not use the built-in Word `Title`, `Heading 1`, `Heading 2`, or theme-colored
 - Use 0.72-inch top and bottom margins and 0.90-inch left and right margins.
 - First-page order is fixed: 6.7-inch-wide cover image, public title, then opening article prose. Do not add a cover sheet, metadata block, byline, date, review label, or colored divider.
 - Default image widths match the latest accepted handoff: cover `6.7 in`, body scene/process images `5.5 in`, and the final `project-review` image `4.5 in` so the closing CTA does not spill onto a nearly empty page. An explicit `docxWidthInches` value may override a body image only when full visual QA confirms the result.
+- Every embedded PNG comes from the approved 1600×900 normalized pair. The matching WebP uses the same crop for Shopify, so the reviewed Word composition and published article do not show different focal framing.
 - Keep the final `project-review` image and the complete following CTA section together. If the group does not fit, move the group to the final page; never leave a few closing lines alone on an otherwise empty page.
 - Place every non-cover image according to its hash-bound `image-assets.json` instruction: `Before <exact H2/H3>` or after the first paragraph under `After <exact H2/H3>`.
 - Keep headings with the following paragraph. Prevent table-row splitting, repeat or reproduce table headers on continuation pages, and avoid clipped narrow columns.

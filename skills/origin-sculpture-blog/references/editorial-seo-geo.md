@@ -71,7 +71,7 @@ Write passages that can be accurately extracted without losing their conditions:
 
 - Use AI-generated photorealistic environment, material, and process scenes as the primary visual system: at least 60% of the approved image manifest and normally the cover. They should show sculpture in believable residential, hospitality, garden, plaza, workshop, delivery, or installation contexts that support the surrounding section.
 - Do not make a laptop, phone, webpage, storefront UI, gallery grid, text panel, visible logo, or watermark the subject. Avoid generated typography entirely. Reject impossible material behavior, tools, anatomy, rigging, bases, or scale during visual QA.
-- Use no more than two current Origin-owned product, installed-setting, workshop, sample, packing, or installation images by default. Their role is site-specific evidence, not a substitute for the scene system.
+- Use two or three current, directly relevant Origin-owned product, installed-setting, workshop, sample, packing, or installation images in every article. Their role is site-specific evidence, not a substitute for the AI scene system, which must remain at least 60% of the image manifest.
 - Never describe generated imagery as a completed Origin Sculpture project, client installation, case study, or proof of a business claim.
 - In `image-assets.json`, label every item with `sourceType` (`generated-editorial`, `origin-owned`, or `user-provided`) and `visualRole` (`environment-scene`, `process-scene`, `material-detail`, or `product-evidence`). Give every meaningful image specific alt text describing what the reader can actually see.
 

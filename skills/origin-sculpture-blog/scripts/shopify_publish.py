@@ -45,7 +45,7 @@ CONFIG_KEYS = {
     "SHOPIFY_ARTICLE_TEMPLATE_SUFFIXES",
     "SHOPIFY_MAX_LIVE_ARTICLES_PER_DAY",
 }
-USER_AGENT = "OriginSculptureBlogSkill/2.4.4 (+https://originsculpture.com)"
+USER_AGENT = "OriginSculptureBlogSkill/2.4.5 (+https://originsculpture.com)"
 BLOG_FILTER_NAMESPACE = "custom"
 BLOG_FILTER_KEY = "blog_filter"
 DEFAULT_MAX_LIVE_ARTICLES_PER_DAY = 3

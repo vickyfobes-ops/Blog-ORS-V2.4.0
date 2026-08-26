@@ -93,7 +93,18 @@ When the bundle uses local images, use `image-assets.json` instead of a public `
 
 `png` is required for the portable Word artifact and is hash-bound with the review bundle. `webp` is required and is the only format published to Shopify. Every non-cover `placement` must be `Before <exact public H2/H3>` or `After <exact public H2/H3>`. Reference inline assets in `article.html` as `origin-asset://<slot>`. The publisher uploads the approved WebP bytes to Shopify Files after confirmation, replaces only those placeholders in memory, and uses the `cover` slot as the article image. Do not use a local filesystem path in publishable HTML.
 
-Every image needs a `sourceType`: `generated-editorial`, `origin-owned`, or `user-provided`. Every image also needs a `visualRole`: `environment-scene`, `process-scene`, `material-detail`, or `product-evidence`. The cover defaults to a `generated-editorial` `environment-scene`; at least 60% of all image assets must be generated editorial scenes/details, and no more than two may use the `product-evidence` role by default. A screen, webpage, catalog UI, visible logo, watermark, or generated text cannot be the primary scene.
+Every image needs a `sourceType`: `generated-editorial`, `origin-owned`, or `user-provided`. Every image also needs a `visualRole`: `environment-scene`, `process-scene`, `material-detail`, or `product-evidence`. The cover defaults to a `generated-editorial` `environment-scene`; at least 60% of all image assets must be generated editorial scenes/details, and no more than three may use the `product-evidence` role. A screen, webpage, catalog UI, visible logo, watermark, or generated text cannot be the primary scene.
+
+Use six to eight images total. Exactly two or three must use `sourceType: "origin-owned"` and `visualRole: "product-evidence"`. Each Origin-owned entry also requires:
+
+```json
+{
+  "sourcePage": "https://originsculpture.com/products/example",
+  "sourceImageUrl": "https://originsculpture.com/cdn/shop/files/example.webp?v=123"
+}
+```
+
+`sourcePage` must be a canonical current Origin product, blog, or project/page URL and must also appear contextually in the article. `sourceImageUrl` must identify the exact original Origin/Shopify media file; never use a webpage screenshot. Run every source through `scripts/normalize_image_asset.py`. Both outputs must be real 1600×900 images: PNG for Word and WebP for Shopify.
 
 After opening the actual PNG, record four boolean `visualQa` results for every asset: `inspected`, `noScreenUiTextLogo`, `realisticMaterialScale`, and `sectionRelevant`. All four must be exactly `true`; never prefill them before inspection. These fields make the required human/vision review auditable but do not convert generated imagery into project evidence.
 
