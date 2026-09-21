@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blog—ORS—运营修订版 V2.6.0"
+  short_description: "带运营修订审计的SEO/GEO写作、Word审核与Shopify安全发布"
+  default_prompt: "请使用 $origin-sculpture-blog-ops-v2-6-0。首次安装后先运行 self_test；若要学习运营对文章的修改，先生成证据边界清晰的 operator-revision-record.md，未经明确确认不得把单篇修改升级为全局规则。"
