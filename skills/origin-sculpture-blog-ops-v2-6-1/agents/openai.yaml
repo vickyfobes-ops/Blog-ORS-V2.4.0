@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blog—ORS—V2.6.1"
+  short_description: "SEO/GEO写作、Word审核、自然内链与Shopify安全发布"
+  default_prompt: "请使用 $origin-sculpture-blog-ops-v2-6-1。安装后先运行自检，通过后按 ORS 审批流程生成文章包和 Word；Shopify 正文不写 H1，从回答段落开始，发布前核实当前模板单一 H1；任何 Shopify 创建或更新都需要当前哈希的精确确认码。"

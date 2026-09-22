@@ -1,4 +1,4 @@
-# Blog—ORS—运营修订版 V2.6.0
+# Blog—ORS—运营修订版 V2.6.1
 
 Origin Sculpture 专用 Codex Blog 自动化 Skill。这个版本与旧版并存，专门加入“运营修订审计”：先对比生成稿、运营改稿和 Shopify 状态，再把有证据的模式写成带适用边界的规则。
 
@@ -15,17 +15,21 @@ Origin Sculpture 专用 Codex Blog 自动化 Skill。这个版本与旧版并存
 ```bash
 python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo vickyfobes-ops/Blog-ORS-V2.4.0 \
-  --path skills/origin-sculpture-blog-ops-v2-6-0 \
-  --ref codex/origin-sculpture-blog-ops-v2-6-0
+  --path skills/origin-sculpture-blog-ops-v2-6-1 \
+  --ref codex/origin-sculpture-blog-ops-v2-6-1
 ```
 
 安装完成后，Skill 会在下一轮对话中可用，调用名为：
 
 ```text
-$origin-sculpture-blog-ops-v2-6-0
+$origin-sculpture-blog-ops-v2-6-1
 ```
 
-旧版 `$origin-sculpture-blog` 不会被覆盖；两个版本可并存、分别调用。它们使用同一份受保护的 Shopify 配置，但安装包本身不含凭证。
+旧版 `$origin-sculpture-blog` 和运营 V2.6.0 都不会被覆盖；三个调用名可并存。它们使用同一份受保护的 Shopify 配置，但安装包本身不含凭证。
+
+## 本次结构规则
+
+Shopify 正文是 body-only HTML，不含 H1，以直接回答问题的段落开头，随后用 H2/H3 组织子问题。公用标题存于 `meta.json.title`，作为主题预期渲染的唯一 H1；Word 审核稿可显示标题，但不得复制 WordPress 外层容器或正文 H1 到 Shopify。上线前须只读核实同一文章模板在公开页面输出的唯一 H1；如无法确认，可保存已授权草稿，但不要建议人工直接发布。
 
 ## 运营修订审计
 
@@ -46,17 +50,17 @@ $origin-sculpture-blog-ops-v2-6-0
 - `read_files`
 - `write_files`
 
-安装后先运行只读店铺验证，不要直接发布测试文章。完整配置要求见 `skills/origin-sculpture-blog/references/shopify-setup.md`。
+安装后先运行只读店铺验证，不要直接发布测试文章。完整配置要求见 `skills/origin-sculpture-blog-ops-v2-6-1/references/shopify-setup.md`。
 
 ## 安装后强制自检
 
-V2.6.0 把“能安装”和“能稳定生成正确成品”分开验证。全新安装或更新后，必须先运行：
+V2.6.1 把“能安装”和“能稳定生成正确成品”分开验证。全新安装或更新后，必须先运行：
 
 ```bash
-python3 skills/origin-sculpture-blog/scripts/self_test.py
+python3 skills/origin-sculpture-blog-ops-v2-6-1/scripts/self_test.py
 ```
 
-自检只在本机创建隔离测试包，不读取店铺凭证、不访问 Shopify、不上传或发布内容。只有输出 `"status": "PASS"` 后，才允许处理正式文章。它会验证固定字体、文章规则、AI 场景图比例、每篇 2–3 张 Origin 站内图片、1600×900 PNG/WebP 格式、人工视觉确认字段、Word 生成与结构、页面渲染对比，并确认错误字体、不合格图片、不合格文章和明显版式漂移能够被拦截。V2.6.0 使用跨平台容差视觉几何校验：Windows/Mac 的字体抗锯齿像素差只作为诊断，结构错误或实质性布局偏移仍会失败。
+自检只在本机创建隔离测试包，不读取店铺凭证、不访问 Shopify、不上传或发布内容。只有输出 `"status": "PASS"` 后，才允许处理正式文章。它会验证固定字体、文章规则、AI 场景图比例、每篇 2–3 张 Origin 站内图片、1600×900 PNG/WebP 格式、人工视觉确认字段、Word 生成与结构、页面渲染对比，并确认错误字体、不合格图片、不合格文章和明显版式漂移能够被拦截。V2.6.1 还会拒绝重复正文 H1、外层 WordPress 容器和 H2 之前的 H3；跨平台容差视觉几何校验保持不变。
 
 ## 主要安全控制
 
