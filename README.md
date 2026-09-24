@@ -6,6 +6,7 @@ V2.7.0 在 V2.6.1 的运营修订边界与 Shopify 正文结构基础上，新�
 - 保存所有已准备文章的图片字节指纹、视觉指纹、来源和生成提示词；
 - 同一 handle 更新可保留原图，跨 handle 复用生成图、近似图或相同提示词会被硬阻断；
 - Origin 原图跨文章复用必须显式记录理由；
+- 首次接收选题时会自动搜索当前工作区、Documents、Desktop、Downloads 和 OneDrive 中的历史 `origin-blog-runs`，无需运营找目录或运行初始化命令；
 - 本地记忆不含 Shopify 凭证，也不执行网络或发布操作。
 
 安装路径和调用名均为 `origin-sculpture-blog-ops-v2-7-0`，与旧版并存。给运营转发时，按电脑现状选择[已安装旧版的升级提示词](运营-已安装旧版-升级提示词-V2.7.0.md)或[从未安装过的首次安装提示词](运营-未安装-首次安装提示词-V2.7.0.md)。完整单段提示词见[本地学习版安装提示词](安装提示词-Blog-ORS-本地学习版-V2.7.0.md)。
@@ -19,7 +20,7 @@ python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-githu
   --ref codex/origin-sculpture-blog-ops-v2-7-0
 ```
 
-安装后必须先运行 `scripts/self_test.py`，再对历史 `origin-blog-runs` 运行 `scripts/local_memory.py bootstrap --runs-root <绝对路径>`。正式使用时调用：
+安装提示词会让 Codex 自动完成自检和首次历史发现。安装成功后，运营直接输入普通选题即可；新版描述会优先接管 ORS Blog 任务。需要人工明确区分版本时，仍可使用：
 
 ```text
 $origin-sculpture-blog-ops-v2-7-0

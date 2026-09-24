@@ -11,7 +11,7 @@ This file is the merchant-approved, fail-closed contract for this release. The d
 ## Locked installation reliability gate
 
 - After every fresh installation or version update, run `scripts/self_test.py` with the Codex workspace document Python runtime. It must return `PASS` before the Skill handles a production article.
-- The self-test must use only the installed copy and an isolated temporary directory. It must pass a valid bundle, prove same-handle image retention is allowed, reject exact and near-duplicate generated-image reuse across handles, reject an invalid editorial/image bundle, build and structurally verify the final-upload DOCX, reject a tampered-font DOCX, render the document, accept a small simulated renderer/rasterizer variation, and reject a deliberately shifted first-page layout.
+- The self-test must use only the installed copy and an isolated temporary directory. It must prove zero-configuration discovery finds a nested historical run root, pass a valid bundle, prove same-handle image retention is allowed, reject exact and near-duplicate generated-image reuse across handles, reject an invalid editorial/image bundle, build and structurally verify the final-upload DOCX, reject a tampered-font DOCX, render the document, accept a small simulated renderer/rasterizer variation, and reject a deliberately shifted first-page layout.
 - Raw pixel difference against the Mac-created reference is diagnostic only because Word, LibreOffice, Windows ClearType, macOS antialiasing, and PDF rasterizers do not produce identical glyph pixels. Hard visual failure uses tolerant unmatched-ink and coarse layout geometry together. Structural font, size, color, order, embedding, and style violations remain unconditional blockers.
 - The self-test never reads credentials, calls Shopify, uploads files, creates an article, or modifies a production bundle. A missing document renderer, font asset, runtime dependency, or failed negative test is a release blocker—not a reason to skip the gate.
 
@@ -59,7 +59,7 @@ For every operator-revision audit, use `references/operator-revision-review.md` 
 ## Locked local-learning memory
 
 - Store evolving operator records and image history outside the installed Skill at the path defined in `references/local-learning-memory.md`; upgrades must not erase it.
-- Bootstrap all known historical run roots after installation. Before each article, run `local_memory.py context` and read topic-relevant indexed revision records within their stated boundaries.
+- Before each article, run `local_memory.py context`; it must automatically discover remembered/common local run roots, incrementally index them, and return topic-relevant revision records within their stated boundaries. Folder discovery and bootstrap are not operator prerequisites.
 - Every passing prepared bundle must be recorded in the image ledger before an approval phrase is issued. Missing, corrupt, or unwritable memory blocks preparation.
 - A local operator record never becomes a global rule automatically. Explicit user promotion or repeated approved evidence remains required.
 - The memory tool is local-only: it does not read Shopify credentials, call Shopify, publish, or upload.

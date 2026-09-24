@@ -15,7 +15,8 @@ Set `ORIGIN_BLOG_MEMORY_DIR` only when the operator intentionally wants another 
 The memory contains:
 
 - `image-usage-ledger.json`: image hashes, visual fingerprints, generation prompts, source media, article handles, and bundle paths;
-- `operator-feedback-index.json`: paths and fingerprints of local `operator-revision-record.md` files.
+- `operator-feedback-index.json`: bounded sections and fingerprints of local `operator-revision-record.md` files;
+- `history-root-discovery.json`: automatically discovered historical run roots and the last scan state.
 
 These files contain no Shopify credential and the memory tool never calls Shopify or the internet.
 
@@ -25,28 +26,18 @@ After establishing the intended handle and before outlining, selecting site imag
 
 ```bash
 python scripts/local_memory.py context \
-  --handle <current-handle> \
-  --runs-root <working-directory>/origin-blog-runs
+  --handle <current-handle>
 ```
 
-The command first indexes previously saved run bundles and operator revision records, then returns local context. Read topic-relevant records listed under `operatorRevisionRecords`. Apply only their `Limited reusable signals` within the recorded conditions. Preserve `Local-only changes`, `Prohibited inferences`, unanswered questions, and `record only` decisions as boundaries. A local record never overrides the release lock, evidence requirements, Shopify approval, or the maintained rules in `operator-editing-rules.md`.
+The command automatically searches the active workspace plus common Windows/macOS user work locations, including Documents, Desktop, Downloads, and available OneDrive roots. It remembers each `origin-blog-runs` directory it finds, indexes saved bundles and operator revision records, then returns local context. Read topic-relevant records listed under `operatorRevisionRecords`. Apply only their `Limited reusable signals` within the recorded conditions. Preserve `Local-only changes`, `Prohibited inferences`, unanswered questions, and `record only` decisions as boundaries. A local record never overrides the release lock, evidence requirements, Shopify approval, or the maintained rules in `operator-editing-rules.md`.
 
 Use `priorImages` as a negative selection list. Do not select, copy, regenerate from the exact same prompt, or present a prior generated visual as a new article asset. A repeated subject such as “studio inspection” is allowed only when the composition, setting, decision purpose, and resulting visual are genuinely new.
 
-## Bootstrap after installation
+## Zero-configuration discovery
 
-On the operator computer, index every known historical `origin-blog-runs` root once:
+The operator does not need to locate folders, configure a history path, invoke the Skill name, or run a setup command before supplying a topic. `context` performs discovery before drafting, while `prepare_bundle.py` repeats it before approval and always includes the active run root. Discovery is cached for 24 hours and every passing bundle is written to the persistent ledger immediately.
 
-```bash
-python scripts/local_memory.py bootstrap \
-  --runs-root <absolute-path-to-origin-blog-runs>
-
-python scripts/local_memory.py status --verbose
-```
-
-Repeat `--runs-root` for additional locations. On future runs, `context` and `prepare_bundle.py` automatically merge the active run root. If historical bundles were deleted, the Skill cannot reconstruct their image bytes; disclose that the ledger protects only history still available at bootstrap plus all future prepared bundles.
-
-For multiple persistent roots, `ORIGIN_BLOG_HISTORY_ROOTS` may contain absolute paths separated by the operating system path separator (`;` on Windows, `:` on macOS/Linux).
+`bootstrap --runs-root <path>` and `ORIGIN_BLOG_HISTORY_ROOTS` remain available only for repair or importing an unusual external/archive location that automatic discovery cannot access. Do not present them as normal prerequisites. Historical files that no longer exist cannot be reconstructed, but this does not block a new topic: the Skill records all available and future history automatically.
 
 ## Image reuse policy
 
@@ -70,6 +61,6 @@ These fields are operational provenance, not public copy.
 
 ## Record operator changes without over-learning
 
-After creating or updating `<run-dir>/operator-revision-record.md`, rerun `local_memory.py bootstrap` for that run root. Future tasks can then find the record from the persistent index.
+After creating or updating `<run-dir>/operator-revision-record.md`, keep it in the article run directory. The next `context` or `prepare_bundle.py` pass indexes it automatically; do not ask the operator to run a separate command.
 
 Do not edit `SKILL.md` automatically from an operator revision. Stable promotion still requires explicit user approval or repeated approved evidence under `operator-revision-review.md`. This separation lets the operator computer learn continuously while preventing a one-off wording change, service claim, image choice, or article structure from becoming a site-wide rule.

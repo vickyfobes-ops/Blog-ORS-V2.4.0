@@ -702,6 +702,8 @@ def tamper_heading_font(source: Path, target: Path) -> None:
 def run_self_test(work_dir: Path, renderer: Path) -> dict[str, object]:
     os.environ["ORIGIN_BLOG_MEMORY_DIR"] = str((work_dir / "operator-memory").resolve())
     os.environ.pop("ORIGIN_BLOG_HISTORY_ROOTS", None)
+    os.environ["ORIGIN_BLOG_AUTO_DISCOVER"] = "0"
+    os.environ.pop("ORIGIN_BLOG_DISCOVERY_ROOTS", None)
     bundle = work_dir / "valid-bundle"
     build_fixture(bundle)
     prepare = SCRIPTS_DIR / "prepare_bundle.py"
@@ -711,6 +713,31 @@ def run_self_test(work_dir: Path, renderer: Path) -> dict[str, object]:
     result = json.loads(positive.stdout)
     if result.get("status") != "PASS":
         raise SelfTestError(f"positive fixture did not pass: {positive.stdout}")
+
+    discovery_sandbox = work_dir / "auto-discovery-sandbox"
+    historical_bundle = discovery_sandbox / "nested" / "origin-blog-runs" / "historical-article"
+    shutil.copytree(bundle, historical_bundle)
+    discovery_memory = work_dir / "auto-discovery-memory"
+    discovery_environment = dict(os.environ)
+    discovery_environment["ORIGIN_BLOG_MEMORY_DIR"] = str(discovery_memory.resolve())
+    discovery_environment["ORIGIN_BLOG_AUTO_DISCOVER"] = "1"
+    discovery_environment["ORIGIN_BLOG_DISCOVERY_ROOTS"] = str(discovery_sandbox.resolve())
+    discovery_result = subprocess.run(
+        [sys.executable, str(SCRIPTS_DIR / "local_memory.py"), "context", "--handle", "future-topic"],
+        text=True,
+        capture_output=True,
+        check=False,
+        env=discovery_environment,
+    )
+    if discovery_result.returncode != 0:
+        raise SelfTestError(f"automatic history discovery failed: {discovery_result.stdout}{discovery_result.stderr}")
+    discovery_report = json.loads(discovery_result.stdout)
+    discovered_roots = discovery_report.get("bootstrap", {}).get("roots", [])
+    if (
+        discovery_report.get("bootstrap", {}).get("imageEntries", 0) < 6
+        or str((discovery_sandbox / "nested" / "origin-blog-runs").resolve()) not in discovered_roots
+    ):
+        raise SelfTestError("automatic history discovery did not index the nested origin-blog-runs folder")
 
     same_handle_bundle = work_dir / "same-handle-revision"
     shutil.copytree(bundle, same_handle_bundle)
@@ -910,6 +937,7 @@ def run_self_test(work_dir: Path, renderer: Path) -> dict[str, object]:
         "sameHandleImageReuseAllowed": True,
         "crossHandleGeneratedImageReuseRejected": True,
         "crossHandleNearDuplicateRejected": True,
+        "automaticHistoryDiscovery": True,
         "isolatedLocalMemory": str((work_dir / "operator-memory").resolve()),
         "fontAssets": verify_font_assets(),
     }

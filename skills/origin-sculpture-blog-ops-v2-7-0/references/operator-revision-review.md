@@ -31,7 +31,7 @@ Write `<run-dir>/operator-revision-record.md` in Chinese with these sections:
 6. **Pending operator questions** — business-scope, technical, image, link, or publication questions that need confirmation before they become reusable.
 7. **Promotion decision** — either `record only`, `propose promotion`, or `promote with explicit user approval`, with the evidence for that decision.
 
-After writing the record, run `scripts/local_memory.py bootstrap --runs-root <working-directory>/origin-blog-runs`. This indexes the evidence on the operator's computer so later tasks can discover and read it. Indexing does not promote any item into a global rule.
+After writing the record, leave it in the article run directory. The next automatic local-memory context/preparation pass indexes the evidence so later tasks can discover and read it. Do not ask the operator to run a separate bootstrap command. Indexing does not promote any item into a global rule.
 
 ## Classification rules
 

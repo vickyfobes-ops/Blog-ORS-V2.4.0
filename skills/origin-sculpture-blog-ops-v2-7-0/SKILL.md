@@ -1,6 +1,6 @@
 ---
 name: origin-sculpture-blog-ops-v2-7-0
-description: Create, review, revise, validate, publish, and safely update source-backed American English Shopify blog articles for Origin Sculpture through a strict three-step workflow. It maintains persistent local operator-learning and image-use records, blocks generated-image reuse across articles, and audits operator edits without turning one-off changes into global rules. Use when a user provides a sculpture topic, asks for an Origin Sculpture SEO/GEO article or outline, supplies a revised Markdown/HTML/DOCX draft, requests relevant Origin Sculpture internal links with at least three product links, asks for pre-publish QA, wants to revise an existing Shopify article, review operator changes, or explicitly approves a prepared create/update action. Trigger on Origin Sculpture blog, 雕塑博客自动化、写博客、审核文章、修改原文章、添加内链、上传博客、发布 Shopify 文章, or explicit $origin-sculpture-blog-ops-v2-7-0 invocation.
+description: Latest default Origin Sculpture Blog workflow; use this version instead of every earlier origin-sculpture-blog variant whenever the user supplies any ORS blog topic, even if they provide only the topic and do not name a skill. Create, review, revise, validate, publish, and safely update source-backed American English Shopify articles. Automatically discover and read persistent local operator/image history, block generated-image reuse across articles, and audit operator edits without turning one-off changes into global rules. Also use for outlines, revised Markdown/HTML/DOCX, internal links, pre-publish QA, existing-article revisions, operator-change reviews, or exact approved create/update actions. Trigger on Origin Sculpture blog, ORS blog, 雕塑博客自动化、写博客、审核文章、修改原文章、添加内链、上传博客、发布 Shopify 文章, or explicit $origin-sculpture-blog-ops-v2-7-0 invocation.
 metadata:
   version: "2.7.0"
 ---
@@ -33,11 +33,10 @@ Establish the intended handle, then load the operator computer's persistent cont
 
 ```bash
 python scripts/local_memory.py context \
-  --handle <current-handle> \
-  --runs-root <working-directory>/origin-blog-runs
+  --handle <current-handle>
 ```
 
-Read topic-relevant `operatorRevisionRecords` returned by the command and preserve their recorded scope. Use `priorImages` as a negative selection list. If the local memory cannot be read or updated, stop image preparation instead of silently proceeding without history.
+This command automatically searches the current workspace and the operator's common local work locations for existing `origin-blog-runs`, remembers every discovered root, and incrementally indexes it. Do not ask the operator to locate folders or run a bootstrap command before accepting a topic. Read topic-relevant `operatorRevisionRecords` returned by the command and preserve their recorded scope. Use `priorImages` as a negative selection list; compare their concepts/prompts and inspect the returned local PNG paths for generated images with a matching role or subject before generating a new visual. If the local memory cannot be read or updated, repair it within the task or report the concrete runtime error; do not turn normal setup into a user prerequisite.
 
 Classify the topic twice before outlining. First choose `pillar` for a broad cluster hub at 1,800–2,500 useful body words or `supporting` for one narrow reader task at 1,000–1,600. Second choose `site-led` for ordering, custom process, company/service, and how-to-work-with-us topics, or `expert-led` for materials, finishes, trends, inspiration, maintenance, installation, and site-planning topics. Record both as `contentTier` and `editorialMode` in `meta.json`. Do not broaden a supporting topic merely to reach length. Record one primary query and three to eight natural supporting or long-tail queries; use them only where they help the reader.
 
@@ -138,12 +137,7 @@ When an operator has revised a prior ORS article, first compare the old and new 
 
 For an operator-revision audit, follow [references/operator-revision-review.md](references/operator-revision-review.md). Save the evidence-bound comparison as `<run-dir>/operator-revision-record.md`. It must separate actual deltas, limited reusable signals, local-only edits, prohibited inferences, and pending operator questions. Do not change the long-lived `operator-editing-rules.md` merely because one review record exists; update it only after the user explicitly requests the promotion or the same pattern is evidenced in multiple approved revisions.
 
-After saving that record, index it on the same operator computer so later tasks can discover it:
-
-```bash
-python scripts/local_memory.py bootstrap \
-  --runs-root <working-directory>/origin-blog-runs
-```
+After saving that record, continue normally. The next automatic context/preparation pass indexes it on the same operator computer; do not assign a separate setup step to the operator.
 
 For an existing Shopify article, create a separate revision bundle instead of overwriting its prior publication record. Set `publicationAction: "update"` in `meta.json`, capture the current remote target before preparation, and preserve the approved handle:
 
@@ -203,7 +197,7 @@ For first-time setup, read `references/shopify-setup.md`, configure the protecte
 ## Use the scripts as hard controls
 
 - `scripts/self_test.py`: after every fresh install or version update, build a clean local fixture bundle, run the positive and negative gates, generate and verify a DOCX, render it, and compare the locked first-page typography/layout geometry with cross-platform raster tolerance. Raw pixel drift is diagnostic; structural violations or material layout drift still fail closed. It never contacts Shopify. Do not use the installed version for production until this command returns `PASS`.
-- `scripts/local_memory.py`: bootstrap and read persistent operator-revision and image-use history outside the installed Skill. It performs no network or Shopify action. Run `context` before drafting and image generation; `prepare_bundle.py` records every passing image set automatically.
+- `scripts/local_memory.py`: automatically discover, index, and read persistent operator-revision and image-use history outside the installed Skill. It performs no network or Shopify action. Run `context` before drafting and image generation; `prepare_bundle.py` repeats discovery and records every passing image set automatically. `bootstrap` is a repair/import command, not a normal operator prerequisite.
 - `scripts/normalize_image_asset.py`: convert an approved original image into the required 1600×900 sRGB PNG/WebP pair with an explicit focal point and stripped metadata.
 - `scripts/site_inventory.py`: crawl the canonical sitemap and rank candidate links.
 - `scripts/prepare_bundle.py`: audit structure, content-tier length, marked/evidenced Origin experience, metadata, link counts, source files, unsafe HTML, canonical inventory membership, live link status, persistent cross-article image reuse, and any captured update target; record passing image history, then create a content hash and action-specific approval phrase.

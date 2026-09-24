@@ -1,4 +1,4 @@
 interface:
   display_name: "Blog—ORS—V2.7.0 本地学习版"
   short_description: "读取本地运营记录、跨文章图片查重、Word审核与Shopify安全发布"
-  default_prompt: "请使用 $origin-sculpture-blog-ops-v2-7-0。首次安装或版本更新后先运行 scripts/self_test.py，并用 scripts/local_memory.py bootstrap 扫描本机历史 origin-blog-runs；任一步未返回 PASS/成功状态，不得处理生产文章。每次先运行 local_memory.py context，读取运营修改边界和历史图片，再确定 Pillar/Supporting、site-led/expert-led。每篇使用 2–3 张直接相关的 Origin 站内原图，其余以全新且通过视觉 QA 的 AI 场景图为主；禁止跨文章复用生成图或相同生成提示词。生成最新版全黑 Origin Word，只有收到当前哈希的精确确认码后才能创建或更新 Shopify 文章。"
+  default_prompt: "这是最新版默认 ORS Blog 工作流。运营只需输入选题；不要要求其先找目录、运行 bootstrap 或补充调用名。接收选题后自动运行 local_memory.py context，搜索并读取本机运营修改记录和历史图片，再确定 Pillar/Supporting、site-led/expert-led。每篇使用 2–3 张直接相关的 Origin 站内原图，其余以全新且通过视觉 QA 的 AI 场景图为主；禁止跨文章复用生成图、近似图或相同生成提示词。生成最新版全黑 Origin Word，只有收到当前哈希的精确确认码后才能创建或更新 Shopify 文章。"

@@ -13,6 +13,7 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import unquote, urlsplit, urlunsplit
@@ -22,10 +23,21 @@ LEDGER_VERSION = 1
 FEEDBACK_VERSION = 1
 IMAGE_LEDGER_NAME = "image-usage-ledger.json"
 FEEDBACK_INDEX_NAME = "operator-feedback-index.json"
+DISCOVERY_STATE_NAME = "history-root-discovery.json"
 MEMORY_ENV = "ORIGIN_BLOG_MEMORY_DIR"
 HISTORY_ROOTS_ENV = "ORIGIN_BLOG_HISTORY_ROOTS"
+DISCOVERY_ROOTS_ENV = "ORIGIN_BLOG_DISCOVERY_ROOTS"
+AUTO_DISCOVER_ENV = "ORIGIN_BLOG_AUTO_DISCOVER"
 NEAR_DUPLICATE_DISTANCE = 5
 MAX_SCANNED_MANIFESTS = 5000
+MAX_DISCOVERY_DIRECTORIES = 30000
+MAX_DISCOVERY_DEPTH = 8
+DISCOVERY_CACHE_SECONDS = 24 * 60 * 60
+DISCOVERY_SKIP_NAMES = {
+    ".git", ".cache", ".gradle", ".idea", ".next", ".npm", ".pnpm-store", ".venv",
+    "__pycache__", "appdata", "applications", "caches", "library", "movies", "music",
+    "node_modules", "pictures", "venv",
+}
 
 
 class LocalMemoryError(RuntimeError):
@@ -81,6 +93,125 @@ def environment_history_roots() -> list[Path]:
         if raw.strip():
             roots.append(Path(raw.strip()).expanduser().resolve())
     return roots
+
+
+def auto_discovery_enabled() -> bool:
+    return os.environ.get(AUTO_DISCOVER_ENV, "1").strip().lower() not in {"0", "false", "no", "off"}
+
+
+def discovery_search_roots() -> list[Path]:
+    configured = os.environ.get(DISCOVERY_ROOTS_ENV, "").strip()
+    if configured:
+        candidates = [Path(raw.strip()).expanduser() for raw in configured.split(os.pathsep) if raw.strip()]
+    else:
+        candidates = [Path.cwd()]
+        home = Path.home()
+        candidates.extend(home / name for name in ("Documents", "Desktop", "Downloads"))
+        for key in ("OneDrive", "OneDriveCommercial", "OneDriveConsumer"):
+            value = os.environ.get(key, "").strip()
+            if value:
+                candidates.append(Path(value).expanduser())
+        candidates.append(home)
+    unique: dict[str, Path] = {}
+    for candidate in candidates:
+        try:
+            resolved = candidate.resolve()
+        except OSError:
+            continue
+        if not resolved.is_dir() or resolved == Path(resolved.anchor):
+            continue
+        unique[str(resolved)] = resolved
+    return list(unique.values())
+
+
+def discover_history_roots(search_roots: list[Path]) -> tuple[list[Path], int, bool]:
+    found: dict[str, Path] = {}
+    visited = 0
+    truncated = False
+    for search_root in search_roots:
+        if search_root.name.lower() == "origin-blog-runs":
+            found[str(search_root.resolve())] = search_root.resolve()
+            continue
+        for current, directories, files in os.walk(
+            search_root,
+            topdown=True,
+            onerror=lambda _error: None,
+            followlinks=False,
+        ):
+            visited += 1
+            if visited >= MAX_DISCOVERY_DIRECTORIES:
+                truncated = True
+                break
+            current_path = Path(current)
+            file_names = {name.lower() for name in files}
+            if (
+                {"meta.json", "image-assets.json"}.issubset(file_names)
+                or "operator-revision-record.md" in file_names
+            ):
+                found[str(current_path.resolve())] = current_path.resolve()
+            try:
+                depth = len(current_path.relative_to(search_root).parts)
+            except ValueError:
+                depth = MAX_DISCOVERY_DEPTH
+            if depth >= MAX_DISCOVERY_DEPTH:
+                directories[:] = []
+                continue
+            retained = []
+            for name in directories:
+                if name.lower() == "origin-blog-runs":
+                    path = (current_path / name).resolve()
+                    found[str(path)] = path
+                    continue
+                if name.lower() in DISCOVERY_SKIP_NAMES:
+                    continue
+                retained.append(name)
+            directories[:] = retained
+        if truncated:
+            break
+    return sorted(found.values()), visited, truncated
+
+
+def load_discovery_state(memory_dir: Path) -> dict:
+    path = memory_dir / DISCOVERY_STATE_NAME
+    if not path.is_file():
+        return {}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def auto_discover_history_roots(memory_dir: Path | None = None, *, force: bool = False) -> list[Path]:
+    if not auto_discovery_enabled():
+        return []
+    directory = (memory_dir or default_memory_dir()).resolve()
+    state = load_discovery_state(directory)
+    cached = [
+        Path(value).expanduser().resolve()
+        for value in state.get("roots", [])
+        if isinstance(value, str) and Path(value).expanduser().exists()
+    ]
+    try:
+        last_scan = float(state.get("scannedAtEpoch", 0) or 0)
+    except (TypeError, ValueError):
+        last_scan = 0
+    if not force and time.time() - last_scan < DISCOVERY_CACHE_SECONDS:
+        return cached
+    discovered, visited, truncated = discover_history_roots(discovery_search_roots())
+    roots = {str(path): path for path in [*cached, *discovered] if path.is_dir()}
+    atomic_json(
+        directory / DISCOVERY_STATE_NAME,
+        {
+            "schemaVersion": 1,
+            "scannedAt": utc_now(),
+            "scannedAtEpoch": time.time(),
+            "roots": sorted(roots),
+            "directoriesVisited": visited,
+            "truncated": truncated,
+        },
+    )
+    return list(roots.values())
 
 
 def atomic_json(path: Path, value: object) -> None:
@@ -191,6 +322,8 @@ def entry_from_asset(
         "sourcePage": str(item.get("sourcePage", "")).strip(),
         "sourceImageUrl": source_image_url,
         "sourceImageKey": normalize_source_image_url(source_image_url),
+        "pngPath": str(png_path) if png_path and png_path.is_file() else "",
+        "webpPath": str(webp_path) if webp_path and webp_path.is_file() else "",
         "pngSha256": sha256_file(png_path) if png_path and png_path.is_file() else "",
         "webpSha256": sha256_file(webp_path) if webp_path and webp_path.is_file() else "",
         "differenceHash": difference_hash(image_path) if image_path and image_path.is_file() else "",
@@ -519,7 +652,11 @@ def record_prepared_entries(entries: list[dict], *, memory_dir: Path | None = No
 
 
 def roots_for_bundle(bundle: Path) -> list[Path]:
-    roots = [bundle.resolve().parent, *environment_history_roots()]
+    roots = [
+        bundle.resolve().parent,
+        *environment_history_roots(),
+        *auto_discover_history_roots(default_memory_dir()),
+    ]
     unique: dict[str, Path] = {str(path): path for path in roots}
     return list(unique.values())
 
@@ -532,7 +669,8 @@ def context_payload(handle: str, memory_dir: Path, limit: int) -> dict:
             key: entry.get(key)
             for key in (
                 "handle", "slot", "sourceType", "visualRole", "visualConcept",
-                "generationPrompt", "sourcePage", "sourceImageUrl", "bundlePath", "recordedAt",
+                "generationPrompt", "sourcePage", "sourceImageUrl", "pngPath", "webpPath",
+                "bundlePath", "recordedAt",
             )
         }
         for entry in ledger["entries"]
@@ -552,13 +690,13 @@ def context_payload(handle: str, memory_dir: Path, limit: int) -> dict:
     }
 
 
-def command_roots(raw_roots: list[Path]) -> list[Path]:
+def command_roots(raw_roots: list[Path], memory_dir: Path) -> list[Path]:
     roots = [path.expanduser().resolve() for path in raw_roots]
     roots.extend(environment_history_roots())
-    if not roots:
-        default = (Path.cwd() / "origin-blog-runs").resolve()
-        if default.exists():
-            roots.append(default)
+    roots.extend(auto_discover_history_roots(memory_dir))
+    default = (Path.cwd() / "origin-blog-runs").resolve()
+    if default.exists():
+        roots.append(default)
     unique = {str(path): path for path in roots}
     return list(unique.values())
 
@@ -583,10 +721,10 @@ def main() -> int:
     memory_dir = (args.memory_dir.expanduser().resolve() if args.memory_dir else default_memory_dir())
     try:
         if args.command == "bootstrap":
-            roots = command_roots(args.runs_root)
+            roots = command_roots(args.runs_root, memory_dir)
             result = bootstrap_memory(roots, memory_dir=memory_dir)
         elif args.command == "context":
-            roots = command_roots(args.runs_root)
+            roots = command_roots(args.runs_root, memory_dir)
             bootstrap_result = bootstrap_memory(roots, memory_dir=memory_dir)
             result = context_payload(args.handle, memory_dir, max(1, args.limit))
             result["bootstrap"] = bootstrap_result
@@ -601,6 +739,7 @@ def main() -> int:
                 "imageEntries": len(ledger["entries"]),
                 "articleHandles": len(handles),
                 "feedbackRecords": len(feedback["records"]),
+                "autoDiscovery": load_discovery_state(memory_dir),
             }
             if args.verbose:
                 result["handles"] = handles
