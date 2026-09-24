@@ -1,4 +1,33 @@
-# Blog—ORS—运营修订版 V2.6.1
+# Blog—ORS—本地学习版 V2.7.0
+
+V2.7.0 在 V2.6.1 的运营修订边界与 Shopify 正文结构基础上，新增一个保存在运营电脑、不会随 Skill 升级丢失的本地记忆层：
+
+- 每次写作前索引并读取 `operator-revision-record.md`，只复用有证据、有适用边界的建议；
+- 保存所有已准备文章的图片字节指纹、视觉指纹、来源和生成提示词；
+- 同一 handle 更新可保留原图，跨 handle 复用生成图、近似图或相同提示词会被硬阻断；
+- Origin 原图跨文章复用必须显式记录理由；
+- 本地记忆不含 Shopify 凭证，也不执行网络或发布操作。
+
+安装路径和调用名均为 `origin-sculpture-blog-ops-v2-7-0`，与旧版并存。给运营转发时，按电脑现状选择[已安装旧版的升级提示词](运营-已安装旧版-升级提示词-V2.7.0.md)或[从未安装过的首次安装提示词](运营-未安装-首次安装提示词-V2.7.0.md)。完整单段提示词见[本地学习版安装提示词](安装提示词-Blog-ORS-本地学习版-V2.7.0.md)。
+
+## V2.7.0 安装
+
+```bash
+python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo vickyfobes-ops/Blog-ORS-V2.4.0 \
+  --path skills/origin-sculpture-blog-ops-v2-7-0 \
+  --ref codex/origin-sculpture-blog-ops-v2-7-0
+```
+
+安装后必须先运行 `scripts/self_test.py`，再对历史 `origin-blog-runs` 运行 `scripts/local_memory.py bootstrap --runs-root <绝对路径>`。正式使用时调用：
+
+```text
+$origin-sculpture-blog-ops-v2-7-0
+```
+
+---
+
+## V2.6.1 说明（保留）
 
 Origin Sculpture 专用 Codex Blog 自动化 Skill。这个版本与旧版并存，专门加入“运营修订审计”：先对比生成稿、运营改稿和 Shopify 状态，再把有证据的模式写成带适用边界的规则。
 
